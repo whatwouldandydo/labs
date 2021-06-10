@@ -21,10 +21,10 @@ def tcp_tuning():
     opt2 = "2. I know my system window size."
 
     print(f"Please selection option 1 or 2: \n{opt1}\n{opt2}\n")
-
-    user_input = int(input("Option: "))
-
+    
     try:
+        user_input = int(input("Option: "))
+
         if user_input == 1:
             """
             Calculate system window size base on network speed and latency.
@@ -62,11 +62,11 @@ def tcp_tuning():
                 print("Please enter a whole number with no comma or period.")
         else:
             print("Exist Program ...")
-            pass
+            exit
 
     except ValueError:
-        """ Error handling to catch non-integer 1 or 2 """
-        print("Please enter number 1 or 2.")
+            """ Error handling to catch non-integer 1 or 2 """
+            print("Please enter number 1 or 2.")
 
 
 if __name__ == "__main__":
