@@ -1,7 +1,7 @@
 """
 Date: 2020-06-09
-Summary: The tcp_tuning.py provides the recommended system settings to get the 
-maximum bandwidth from your network.
+Summary: The tcp_tuning.py provides a recommended system window size settings
+to achieve the maximum bandwidth from your network.
 """
 
 def tcp_tuning():
