@@ -15,7 +15,8 @@ def tcp_tuning():
     ==================================================================================
     """
     print(warning_screen)
-
+    
+    """ Provide display options and user to pick one. """
     opt1 = "1. I know my network speed."
     opt2 = "2. I know my system window size."
 
@@ -26,6 +27,7 @@ def tcp_tuning():
     try:
         if user_input == 1:
             """
+            Calculate system window size base on network speed and latency.
             Window Size in Byte = Speed * 10^6 / 8 * Latency / 1000
             """
             try:
@@ -46,6 +48,7 @@ def tcp_tuning():
                 print("Please enter a whole number with no comma or period.")
         elif user_input == 2:
             """
+            Calculate network speed base on system window size and latency.
             Speed in Mbit/sec = Window Size * 8 / Latency / 1000
             """
             try:
@@ -58,10 +61,11 @@ def tcp_tuning():
             except ValueError:
                 print("Please enter a whole number with no comma or period.")
         else:
-            # exit()
+            print("Exist Program ...")
             pass
-        
+
     except ValueError:
+        """ Error handling to catch non-integer 1 or 2 """
         print("Please enter number 1 or 2.")
 
 
