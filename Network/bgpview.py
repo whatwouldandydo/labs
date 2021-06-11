@@ -35,14 +35,25 @@ class BGPView:
         # Replace ix_id with integer.
         self.ix_api = "https://api.bgpview.io/ix/ix_id"
 
-    def get_asn(self, asn_number):
-        # Check if asn_number is integer
+    def get_asn(self, as_number):
+        """
+        Get AS information such as country, name, looking glass,
+        bandwidth, allocation status.
+        """
         try:
-            # asn_number = int(asn_number)
-            if int(asn_number) == True:
-                asn_api = self.asn_api.replace("as_number", asn_number)
+            # Check if as_number is integer
+            if int(as_number) == True:
+                asn_api = self.asn_api.replace("as_number", as_number)
+                print("asn_api")
+                return asn_api
 
         except:
             print("Invalid AS Number")
 
 
+
+t1 = BGPView()
+t1.get_asn(1234)
+
+t2 = BGPView()
+# t2.get_asn("dsd")
