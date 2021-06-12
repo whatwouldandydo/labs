@@ -8,6 +8,7 @@ Upstreams, Downstream and IP.
 import requests
 import json
 import time
+import traceback
 from pprint import pprint
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -54,29 +55,48 @@ class BGPView:
                 while query_count != 3:
                     query_count += 1
                     time.sleep(3)
+
                     if web_request.status_code == 200:
                         meta = web_request.json()
                         data = meta["data"]
+                        # ASN health status
                         status = meta["status"]
+                        # ASN number
                         asn = data["asn"]
+                        # ASN origin country code
                         country_code = data["country_code"]
+                        # ASN name
                         description_short = data["description_short"]
+                        # ASN looking glass website 
                         looking_glass = data["looking_glass"]
+                        # ASN RIR name
                         rir_name = data["rir_allocation"]["rir_name"]
+                        # ASN regional (IRIN) allocation status (assigned, unassigned)
                         allocation_status = data["rir_allocation"]["allocation_status"]
+                        # ASN creation date
                         date_allocated = data["rir_allocation"]["date_allocated"]
+                        # ASN traffic direction
                         traffic_estimation = data["traffic_estimation"]
+                        # ASN traffic ratio
                         traffic_ratio = data["traffic_ratio"]
+                        # ASN company website
                         website = data["website"]
+                        # ASN IANA allocation status (assigned, unassigned)
                         assignment_status = data["iana_assignment"]["assignment_status"]
+                        # ASN last updated date
                         date_updated = data["date_updated"]
                         print(f"{description_short}\n")
                         break
                 else:
                     print(f"ERROR {web_request}: Try to access {asn_api} 3 times but fail.\n")
 
-            except:
+            except TypeError:
                 print(f"ERROR: {number} is NOT a valid AS number.\n")
+
+            except:
+                print(f"UNKNOWN ERROR: See debug output below...")
+                traceback.print_exc()
+                print()
 
 """
 2. Retrieve indiviual attribute such as asn, rir_name, looking_glass
