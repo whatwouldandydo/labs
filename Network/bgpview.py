@@ -42,10 +42,52 @@ class BGPView:
         """
         try:
             # Check if as_number is integer
-            if int(as_number) == True:
-                asn_api = self.asn_api.replace("as_number", as_number)
-                print("asn_api")
-                return asn_api
+            # as_number = int(input("AS Number: "))
+            as_number = 59687
+            asn_api = self.asn_api.replace("as_number", str(as_number))
+            # print(asn_api)
+            # return asn_api
+            web_request = requests.get(f"{asn_api}", verify=False)
+            print(web_request) # <Response [200]>
+            meta = web_request.json()
+            # pprint(meta)
+            data = meta["data"]
+            """
+            data dict_keys(['asn', 'name', 'description_short', 'description_full',
+            'country_code', 'website', 'email_contacts', 'abuse_contacts',
+            'looking_glass', 'traffic_estimation', 'traffic_ratio',
+            'owner_address', 'rir_allocation', 'iana_assignment', 'date_updated'])
+            """
+            # pprint(data)
+            status = meta["status"]
+            print(status)
+            asn = data["asn"]
+            print(asn)
+            country_code = data["country_code"]
+            # country = data["owner_address"]
+            print(country_code)
+            # print(country)
+            description_short = data["description_short"]
+            print(description_short)
+            looking_glass = data["looking_glass"]
+            print(looking_glass)
+            rir_name = data["rir_allocation"]["rir_name"]
+            print(rir_name)
+            allocation_status = data["rir_allocation"]["allocation_status"]
+            print(allocation_status)
+            date_allocated = data["rir_allocation"]["date_allocated"]
+            print(date_allocated)
+            traffic_estimation = data["traffic_estimation"]
+            print(traffic_estimation)
+            traffic_ratio = data["traffic_ratio"]
+            print(traffic_ratio)
+            website = data["website"]
+            print(website)
+            assignment_status = data["iana_assignment"]["assignment_status"]
+            print(assignment_status)
+            date_updated = data["date_updated"]
+            print(date_updated)
+
 
         except:
             print("Invalid AS Number")
