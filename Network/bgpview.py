@@ -49,45 +49,75 @@ class BGPView:
             # return asn_api
             web_request = requests.get(f"{asn_api}", verify=False)
             print(web_request) # <Response [200]>
-            meta = web_request.json()
-            # pprint(meta)
-            data = meta["data"]
-            """
-            data dict_keys(['asn', 'name', 'description_short', 'description_full',
-            'country_code', 'website', 'email_contacts', 'abuse_contacts',
-            'looking_glass', 'traffic_estimation', 'traffic_ratio',
-            'owner_address', 'rir_allocation', 'iana_assignment', 'date_updated'])
-            """
-            # pprint(data)
-            status = meta["status"]
-            print(status)
-            asn = data["asn"]
-            print(asn)
-            country_code = data["country_code"]
-            # country = data["owner_address"]
-            print(country_code)
-            # print(country)
-            description_short = data["description_short"]
-            print(description_short)
-            looking_glass = data["looking_glass"]
-            print(looking_glass)
-            rir_name = data["rir_allocation"]["rir_name"]
-            print(rir_name)
-            allocation_status = data["rir_allocation"]["allocation_status"]
-            print(allocation_status)
-            date_allocated = data["rir_allocation"]["date_allocated"]
-            print(date_allocated)
-            traffic_estimation = data["traffic_estimation"]
-            print(traffic_estimation)
-            traffic_ratio = data["traffic_ratio"]
-            print(traffic_ratio)
-            website = data["website"]
-            print(website)
-            assignment_status = data["iana_assignment"]["assignment_status"]
-            print(assignment_status)
-            date_updated = data["date_updated"]
-            print(date_updated)
+            if web_request.status_code != 200:
+                time.sleep(3)
+            elif web_request != 200:
+                meta = web_request.json()
+                data = meta["data"]
+                status = meta["status"]
+                asn = data["asn"]
+                country_code = data["country_code"]
+                description_short = data["description_short"]
+                looking_glass = data["looking_glass"]
+                rir_name = data["rir_allocation"]["rir_name"]
+                allocation_status = data["rir_allocation"]["allocation_status"]
+                date_allocated = data["rir_allocation"]["date_allocated"]
+                traffic_estimation = data["traffic_estimation"]
+                traffic_ratio = data["traffic_ratio"]
+                website = data["website"]
+                assignment_status = data["iana_assignment"]["assignment_status"]
+                date_updated = data["date_updated"]
+                print(date_updated)
+                # break
+            else:
+                print(f"Query Fail===> {web_request}")
 
+            count = 0
+            while (web_request.status_code != 200) and (count != 3):
+                time.sleep(3)
+                count += 1
+                print(web_request)
+            else:
+                meta = web_request.json()
+                data = meta["data"]
+                status = meta["status"]
+                asn = data["asn"]
+                country_code = data["country_code"]
+                description_short = data["description_short"]
+                looking_glass = data["looking_glass"]
+                rir_name = data["rir_allocation"]["rir_name"]
+                allocation_status = data["rir_allocation"]["allocation_status"]
+                date_allocated = data["rir_allocation"]["date_allocated"]
+                traffic_estimation = data["traffic_estimation"]
+                traffic_ratio = data["traffic_ratio"]
+                website = data["website"]
+                assignment_status = data["iana_assignment"]["assignment_status"]
+                date_updated = data["date_updated"]
+                print(date_updated)
+
+            query_count = 0
+            while query_count != 3:
+                query_count += 1
+                if web_request.status_code == 200:
+                    meta = web_request.json()
+                    data = meta["data"]
+                    status = meta["status"]
+                    asn = data["asn"]
+                    country_code = data["country_code"]
+                    description_short = data["description_short"]
+                    looking_glass = data["looking_glass"]
+                    rir_name = data["rir_allocation"]["rir_name"]
+                    allocation_status = data["rir_allocation"]["allocation_status"]
+                    date_allocated = data["rir_allocation"]["date_allocated"]
+                    traffic_estimation = data["traffic_estimation"]
+                    traffic_ratio = data["traffic_ratio"]
+                    website = data["website"]
+                    assignment_status = data["iana_assignment"]["assignment_status"]
+                    date_updated = data["date_updated"]
+                    print(country_code)
+                    break
+            else:
+                print(f"Query Fail===> {web_request}")
 
         except:
             print("Invalid AS Number")
@@ -99,3 +129,4 @@ t1.get_asn(1234)
 
 t2 = BGPView()
 # t2.get_asn("dsd")
+
