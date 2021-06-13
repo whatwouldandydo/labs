@@ -15,26 +15,7 @@ from urllib3.exceptions import InsecureRequestWarning
 """ Disable SSL warning self-sign certificate """
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-# main_url = "https://api.bgpview.io/"
-# asn_api = "https://api.bgpview.io/asn/as_number"
-# asn_prefixes_api = "https://api.bgpview.io/asn/as_number/prefixes"
-# asn_peers_api = "https://api.bgpview.io/asn/as_number/peers"
-# asn_upstreams_api = "https://api.bgpview.io/asn/as_number/upstreams"
-# asn_downstreams_api = "https://api.bgpview.io/asn/as_number/downstreams"
-# asn_ixs_api = "https://api.bgpview.io/asn/as_number/ixs"
-
 class BGPView:
-    # main_url = "https://api.bgpview.io/"
-    # asn_api = "https://api.bgpview.io/asn/as_number"
-    # asn_prefixes_api = "https://api.bgpview.io/asn/as_number/prefixes"
-    # asn_peers_api = "https://api.bgpview.io/asn/as_number/peers"
-    # asn_upstreams_api = "https://api.bgpview.io/asn/as_number/upstreams"
-    # asn_downstreams_api = "https://api.bgpview.io/asn/as_number/downstreams"
-    # asn_ixs_api = "https://api.bgpview.io/asn/as_number/ixs"
-
-    # global asn_api
-    # asn_api = "https://api.bgpview.io/asn/as_number"
-
     def __init__(self):
         """ Endpoint APIs """
         # # Replace as_number with integer.
@@ -88,11 +69,8 @@ class BGPView:
         information such as, name, country, looking glass,
         bandwidth, allocation status, and more.
         """
-        # Replace as_number with numberical value.
-        # asn_api = "https://api.bgpview.io/asn/as_number"
         for number in as_number:
             try:
-                # asn_api = asn_api.replace("as_number", str(number))
                 asn_api = self.asn_api.replace("as_number", str(number))
                 print(asn_api)
                 web_request = requests.get(f"{asn_api}", verify=False)
@@ -111,29 +89,17 @@ class BGPView:
                         data = meta["data"]
                         # ASN health status
                         self.status = meta["status"]
-                        # ASN number
                         self.asn = data["asn"]
-                        # ASN origin country code
                         self.country_code = data["country_code"]
-                        # ASN name
                         self.description_short = data["description_short"]
-                        # ASN looking glass website 
                         self.looking_glass = data["looking_glass"]
-                        # ASN RIR name
                         self.rir_name = data["rir_allocation"]["rir_name"]
-                        # ASN regional (IRIN) allocation status (assigned, unassigned)
                         self.allocation_status = data["rir_allocation"]["allocation_status"]
-                        # ASN creation date
                         self.date_allocated = data["rir_allocation"]["date_allocated"]
-                        # ASN traffic direction
                         self.traffic_estimation = data["traffic_estimation"]
-                        # ASN traffic ratio
                         self.traffic_ratio = data["traffic_ratio"]
-                        # ASN company website
                         self.website = data["website"]
-                        # ASN IANA allocation status (assigned, unassigned)
                         self.assignment_status = data["iana_assignment"]["assignment_status"]
-                        # ASN last updated date
                         self.date_updated = data["date_updated"]
                         # print(f"{description_short}\n")
                         break
@@ -149,7 +115,14 @@ class BGPView:
                 print()
 
 """
-2. Access attribute such as country_code, description_short, from t1.get_asn
+3. Can not get all the  instances from get_asn(1000,2000,3000,4000).
+Only retreive instances from the last 4000
+
+https://api.bgpview.io/asn/1000
+https://api.bgpview.io/asn/2000
+https://api.bgpview.io/asn/3000
+https://api.bgpview.io/asn/4000
+4000 Sprint International ok
 """
 
 t1 = BGPView()
