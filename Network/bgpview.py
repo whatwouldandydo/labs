@@ -15,6 +15,7 @@ from urllib3.exceptions import InsecureRequestWarning
 """ Disable SSL warning self-sign certificate """
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
+
 class BGPView:
     def __init__(self):
         """ Endpoint APIs """
@@ -89,9 +90,12 @@ class BGPView:
                         data = meta["data"]
                         # ASN health status
                         self.status = meta["status"]
-                        self.asn = data["asn"]
-                        self.country_code = data["country_code"]
-                        self.description_short = data["description_short"]
+                        asn = data["asn"]
+                        country_code = data["country_code"]
+                        description_short = data["description_short"]
+                        # self.asn = data["asn"]
+                        # self.country_code = data["country_code"]
+                        # self.description_short = data["description_short"]
                         self.looking_glass = data["looking_glass"]
                         self.rir_name = data["rir_allocation"]["rir_name"]
                         self.allocation_status = data["rir_allocation"]["allocation_status"]
@@ -103,8 +107,9 @@ class BGPView:
                         self.date_updated = data["date_updated"]
                         # print(f"{description_short}\n")
                         break
+                        # continue
                 else:
-                    print(f"ERROR {web_request}: Try to access {asn_api} 3 times but fail.\n")
+                    print(f"ERROR {web_request}: Try to access {asn_api} three times but fail.\n")
 
             except KeyError:
                 print(f"ERROR: {number} is NOT a valid AS number.\n")
@@ -113,6 +118,14 @@ class BGPView:
                 print(f"UNKNOWN ERROR: See debug output below...")
                 traceback.print_exc()
                 print()
+
+            # self.asn = asn
+            # self.country_code = country_code
+            # self.description_short = description_short
+
+        self.asn = asn
+        self.country_code = country_code
+        self.description_short = description_short
 
 """
 3. Can not get all the  instances from get_asn(1000,2000,3000,4000).
@@ -125,17 +138,20 @@ https://api.bgpview.io/asn/4000
 4000 Sprint International ok
 """
 
+print()
 t1 = BGPView()
 # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
 t1.get_asn(1000,2000,3000,4000)
-print(t1.asn, t1.description_short, t1.status)
+print(t1.asn, t1.description_short, t1.country_code)
 
+print()
 t2 = BGPView()
 t2.get_asn(111)
-print(t2.asn, t2.description_short, t2.status)
+print(t2.asn, t2.description_short, t2.country_code)
 t2.get_asn(222)
-print(t2.asn, t2.description_short, t2.status)
+print(t2.asn, t2.description_short, t2.country_code)
 
+print()
 # t3 = BGPView()
 # print(t3.asn)
 # print(t3.status)
