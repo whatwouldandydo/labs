@@ -17,26 +17,26 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 
 class BGPView:
+    """ Endpoint APIs """
+    # Replace as_number with integer.
+    main_url = "https://api.bgpview.io/"
+    asn_api = "https://api.bgpview.io/asn/as_number"
+    asn_prefixes_api = "https://api.bgpview.io/asn/as_number/prefixes"
+    asn_peers_api = "https://api.bgpview.io/asn/as_number/peers"
+    asn_upstreams_api = "https://api.bgpview.io/asn/as_number/upstreams"
+    asn_downstreams_api = "https://api.bgpview.io/asn/as_number/downstreams"
+    asn_ixs_api = "https://api.bgpview.io/asn/as_number/ixs"
+
+    # Replace ip_address/cidr with network/mask (/24).
+    prefix_api = "https://api.bgpview.io/prefix/ip_address/cidr"
+
+    # Replace ip_address with individual IP address.
+    ip_api = "https://api.bgpview.io/ip/ip_address"
+
+    # Replace ix_id with integer.
+    ix_api = "https://api.bgpview.io/ix/ix_id"
+
     def __init__(self):
-        """ Endpoint APIs """
-        # # Replace as_number with integer.
-        # main_url = "https://api.bgpview.io/"
-        self.asn_api = "https://api.bgpview.io/asn/as_number"
-        # asn_prefixes_api = "https://api.bgpview.io/asn/as_number/prefixes"
-        # asn_peers_api = "https://api.bgpview.io/asn/as_number/peers"
-        # asn_upstreams_api = "https://api.bgpview.io/asn/as_number/upstreams"
-        # asn_downstreams_api = "https://api.bgpview.io/asn/as_number/downstreams"
-        # asn_ixs_api = "https://api.bgpview.io/asn/as_number/ixs"
-
-        # # Replace ip_address/cidr with network/mask (/24).
-        # prefix_api = "https://api.bgpview.io/prefix/ip_address/cidr"
-
-        # # Replace ip_address with individual IP address.
-        # ip_api = "https://api.bgpview.io/ip/ip_address"
-
-        # # Replace ix_id with integer.
-        # ix_api = "https://api.bgpview.io/ix/ix_id"
-
         # ASN health status
         self.status = None
         # ASN number
@@ -84,18 +84,12 @@ class BGPView:
                     time.sleep(3)
 
                     if web_request.status_code == 200:
-                        # time.sleep(1)
                         meta = web_request.json()
-                        # print(meta)
                         data = meta["data"]
-                        # ASN health status
                         self.status = meta["status"]
-                        asn = data["asn"]
-                        country_code = data["country_code"]
-                        description_short = data["description_short"]
-                        # self.asn = data["asn"]
-                        # self.country_code = data["country_code"]
-                        # self.description_short = data["description_short"]
+                        self.asn = data["asn"]
+                        self.country_code = data["country_code"]
+                        self.description_short = data["description_short"]
                         self.looking_glass = data["looking_glass"]
                         self.rir_name = data["rir_allocation"]["rir_name"]
                         self.allocation_status = data["rir_allocation"]["allocation_status"]
@@ -105,9 +99,8 @@ class BGPView:
                         self.website = data["website"]
                         self.assignment_status = data["iana_assignment"]["assignment_status"]
                         self.date_updated = data["date_updated"]
-                        # print(f"{description_short}\n")
                         break
-                        # continue
+
                 else:
                     print(f"ERROR {web_request}: Try to access {asn_api} three times but fail.\n")
 
@@ -119,13 +112,6 @@ class BGPView:
                 traceback.print_exc()
                 print()
 
-            # self.asn = asn
-            # self.country_code = country_code
-            # self.description_short = description_short
-
-        self.asn = asn
-        self.country_code = country_code
-        self.description_short = description_short
 
 """
 3. Can not get all the  instances from get_asn(1000,2000,3000,4000).
@@ -155,3 +141,16 @@ print()
 # t3 = BGPView()
 # print(t3.asn)
 # print(t3.status)
+
+print()
+import datetime
+d1 = datetime.datetime.now()
+t4 = BGPView()
+for i in range(5):
+    d2 = datetime.datetime.now()
+    t4.get_asn(i)
+    print(t4.asn,t4.description_short,t4.country_code)
+    d3 = datetime.datetime.now()
+    print(d2 - d1)
+    print(d3 - d2)
+    print()
