@@ -38,31 +38,31 @@ class BGPView:
 
     def __init__(self):
         # ASN health status
-        self.status = None
+        self.asn_status = None
         # ASN number
-        self.asn = None
+        self.asn_number = None
         # ASN origin country code
-        self.country_code = None
+        self.asn_country_code = None
         # ASN name
-        self.description_short = None
+        self.asn_name = None
         # ASN looking glass website 
-        self.looking_glass = None
+        self.asn_looking_glass_website = None
         # ASN RIR name
-        self.rir_name = None
+        self.asn_rir_name = None
         # ASN regional (IRIN) allocation status (assigned, unassigned)
-        self.allocation_status = None
+        self.asn_allocation_status = None
         # ASN creation date
-        self.date_allocated = None
+        self.asn_date_allocated = None
         # ASN traffic direction
-        self.traffic_estimation = None
+        self.asn_traffic_estimation = None
         # ASN traffic ratio
-        self.traffic_ratio = None
+        self.asn_traffic_ratio = None
         # ASN company website
-        self.website = None
+        self.asn_company_website = None
         # ASN IANA allocation status (assigned, unassigned)
-        self.assignment_status = None
+        self.asn_assignment_status = None
         # ASN last updated date
-        self.date_updated = None
+        self.asn_date_updated = None
 
     def get_asn(self, *as_number):
         """
@@ -76,7 +76,7 @@ class BGPView:
                 print(asn_api)
                 web_request = requests.get(f"{asn_api}", verify=False)
                 # print(web_request) # <Response [200]>
-
+                
                 # When API request fails, retry it 3 times with 3 seconds wait
                 query_count = 0
                 while query_count != 3:
@@ -86,19 +86,19 @@ class BGPView:
                     if web_request.status_code == 200:
                         meta = web_request.json()
                         data = meta["data"]
-                        self.status = meta["status"]
-                        self.asn = data["asn"]
-                        self.country_code = data["country_code"]
-                        self.description_short = data["description_short"]
-                        self.looking_glass = data["looking_glass"]
-                        self.rir_name = data["rir_allocation"]["rir_name"]
-                        self.allocation_status = data["rir_allocation"]["allocation_status"]
-                        self.date_allocated = data["rir_allocation"]["date_allocated"]
-                        self.traffic_estimation = data["traffic_estimation"]
-                        self.traffic_ratio = data["traffic_ratio"]
-                        self.website = data["website"]
-                        self.assignment_status = data["iana_assignment"]["assignment_status"]
-                        self.date_updated = data["date_updated"]
+                        self.asn_status = meta["status"]
+                        self.asn_number = data["asn"]
+                        self.asn_country_code = data["country_code"]
+                        self.asn_name = data["description_short"]
+                        self.asn_looking_glass_website = data["looking_glass"]
+                        self.asn_rir_name = data["rir_allocation"]["rir_name"]
+                        self.asn_allocation_status = data["rir_allocation"]["allocation_status"]
+                        self.asn_date_allocated = data["rir_allocation"]["date_allocated"]
+                        self.asn_traffic_estimation = data["traffic_estimation"]
+                        self.asn_traffic_ratio = data["traffic_ratio"]
+                        self.asn_company_website = data["website"]
+                        self.asn_assignment_status = data["iana_assignment"]["assignment_status"]
+                        self.asn_date_updated = data["date_updated"]
                         break
 
                 else:
@@ -114,43 +114,42 @@ class BGPView:
 
 
 """
-3. Can not get all the  instances from get_asn(1000,2000,3000,4000).
+3. Can not get all the  instances from get_asn(3000,4000).
 Only retreive instances from the last 4000
 
-https://api.bgpview.io/asn/1000
-https://api.bgpview.io/asn/2000
 https://api.bgpview.io/asn/3000
 https://api.bgpview.io/asn/4000
 4000 Sprint International ok
 """
 
-print()
-t1 = BGPView()
-# t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
-t1.get_asn(1000,2000,3000,4000)
-print(t1.asn, t1.description_short, t1.country_code)
-
-print()
-t2 = BGPView()
-t2.get_asn(111)
-print(t2.asn, t2.description_short, t2.country_code)
-t2.get_asn(222)
-print(t2.asn, t2.description_short, t2.country_code)
-
-print()
-# t3 = BGPView()
-# print(t3.asn)
-# print(t3.status)
-
-print()
-import datetime
-d1 = datetime.datetime.now()
-t4 = BGPView()
-for i in range(5):
-    d2 = datetime.datetime.now()
-    t4.get_asn(i)
-    print(t4.asn,t4.description_short,t4.country_code)
-    d3 = datetime.datetime.now()
-    print(d2 - d1)
-    print(d3 - d2)
+if __name__ == "__main__":
     print()
+    t1 = BGPView()
+    t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
+    # t1.get_asn(1000, 2000, 3000, 4000)
+    print(t1.asn_number, t1.asn_name, t1.asn_country_code)
+
+    print()
+    t2 = BGPView()
+    t2.get_asn("ad")
+    print(t2.asn_number, t2.asn_name, t2.asn_country_code)
+    t2.get_asn(222)
+    print(t2.asn_number, t2.asn_name, t2.asn_country_code)
+
+    # print()
+    # t3 = BGPView()
+    # print(t3.asn)
+    # print(t3.status)
+
+    print()
+    import datetime
+    d1 = datetime.datetime.now()
+    t4 = BGPView()
+    for i in range(5):
+        d2 = datetime.datetime.now()
+        t4.get_asn(i)
+        print(t4.asn_number,t4.asn_name,t4.asn_country_code)
+        d3 = datetime.datetime.now()
+        print(d2 - d1)
+        print(d3 - d2)
+        print()
