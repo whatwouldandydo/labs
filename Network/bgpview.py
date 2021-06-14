@@ -120,9 +120,40 @@ class BGPView:
         web_request = requests.get(f"{asn_prefixes_api}", verify=False)
         print(web_request)
 
+        query_count = 0
+        while query_count != 3:
+            query_count += 1
+            time.sleep(3)
+
+            if web_request.status_code == 200:
+                meta = web_request.json()
+                # pprint(meta)
+                status_code = meta["status"]
+                if status_code == "ok":
+                    print(f"Oops I did it again {asn_prefixes_api}")
+                    data = meta["data"]
+                    # print(type(data), data)
+                    ipv4_prefixes = data["ipv4_prefixes"]
+                    print(type(ipv4_prefixes))
+                    print(len(ipv4_prefixes))
+                    ipv6_prefixes = data["ipv6_prefixes"]
+                    # print(type(ipv6_prefixes), ipv6_prefixes)
+
+                    # print(len(ipv4_prefixes))
+
+                    for prefix in ipv4_prefixes:
+                        print(type(prefix)) # dict
+                        print(prefix)
+                        input()
+                    break
+                elif status_code == "error":
+                    # meta = web_request.json()
+                    print(f"Oops I did it again {asn_prefixes_api}")
+                    break
+
         # except KeyError:
             # print(f"ERROR {web_request}: Try to access {asn_api} three times but fail.\n"
-
+            
 
 
 """
@@ -141,7 +172,9 @@ if __name__ == "__main__":
     # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    t1.get_asn_prefixes("11")
+    t1.get_asn_prefixes("1")
+    # t1.get_asn_prefixes("11")
+    # t1.get_asn_prefixes("a")
 
     # print()
     # t2 = BGPView()
