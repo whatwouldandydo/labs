@@ -112,6 +112,18 @@ class BGPView:
                 traceback.print_exc()
                 print()
 
+    def get_asn_prefixes(self, as_number):
+        """ Get prefixes IPv4 and IPv6 from the AS number """
+        try:
+            asn_prefixes_api = self.asn_prefixes_api.replace("as_number", str(as_number))
+            print(asn_prefixes_api)
+            web_request = requests.get(f"{asn_prefixes_api}", verify=False)
+            print(web_request)
+
+        except KeyError:
+            print(f"ERROR {web_request}: Try to access {asn_api} three times but fail.\n"
+
+
 
 """
 3. Can not get all the  instances from get_asn(3000,4000).
@@ -122,34 +134,36 @@ https://api.bgpview.io/asn/4000
 4000 Sprint International ok
 """
 
+
 if __name__ == "__main__":
     print()
     t1 = BGPView()
-    t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
-    # t1.get_asn(1000, 2000, 3000, 4000)
-    print(t1.asn_number, t1.asn_name, t1.asn_country_code)
+    # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
+    # t1.get_asn(3000, 4000)
+    # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
+    t1.get_asn_prefixes("11")
 
-    print()
-    t2 = BGPView()
-    t2.get_asn("ad")
-    print(t2.asn_number, t2.asn_name, t2.asn_country_code)
-    t2.get_asn(222)
-    print(t2.asn_number, t2.asn_name, t2.asn_country_code)
+    # print()
+    # t2 = BGPView()
+    # t2.get_asn("ad")
+    # print(t2.asn_number, t2.asn_name, t2.asn_country_code)
+    # t2.get_asn(222)
+    # print(t2.asn_number, t2.asn_name, t2.asn_country_code)
 
     # print()
     # t3 = BGPView()
     # print(t3.asn)
     # print(t3.status)
 
-    print()
-    import datetime
-    d1 = datetime.datetime.now()
-    t4 = BGPView()
-    for i in range(5):
-        d2 = datetime.datetime.now()
-        t4.get_asn(i)
-        print(t4.asn_number,t4.asn_name,t4.asn_country_code)
-        d3 = datetime.datetime.now()
-        print(d2 - d1)
-        print(d3 - d2)
-        print()
+    # print()
+    # import datetime
+    # d1 = datetime.datetime.now()
+    # t4 = BGPView()
+    # for i in range(5):
+    #     d2 = datetime.datetime.now()
+    #     t4.get_asn(i)
+    #     print(t4.asn_number,t4.asn_name,t4.asn_country_code)
+    #     d3 = datetime.datetime.now()
+    #     print(d2 - d1)
+    #     print(d3 - d2)
+    #     print()
