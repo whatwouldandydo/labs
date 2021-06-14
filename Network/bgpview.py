@@ -114,14 +114,14 @@ class BGPView:
 
     def get_asn_prefixes(self, as_number):
         """ Get prefixes IPv4 and IPv6 from the AS number """
-        try:
-            asn_prefixes_api = self.asn_prefixes_api.replace("as_number", str(as_number))
-            print(asn_prefixes_api)
-            web_request = requests.get(f"{asn_prefixes_api}", verify=False)
-            print(web_request)
+        # try:
+        asn_prefixes_api = self.asn_prefixes_api.replace("as_number", str(as_number))
+        print(asn_prefixes_api)
+        web_request = requests.get(f"{asn_prefixes_api}", verify=False)
+        print(web_request)
 
-        except KeyError:
-            print(f"ERROR {web_request}: Try to access {asn_api} three times but fail.\n"
+        # except KeyError:
+            # print(f"ERROR {web_request}: Try to access {asn_api} three times but fail.\n"
 
 
 
