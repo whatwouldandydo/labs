@@ -129,26 +129,47 @@ class BGPView:
                 meta = web_request.json()
                 # pprint(meta)
                 status_code = meta["status"]
-                if status_code == "ok":
-                    print(f"Oops I did it again {asn_prefixes_api}")
+
+                if status_code == "error":
+                    print(f"ERORR: {as_number} is not a valid.")
+                    break
+                elif status_code == "ok":
                     data = meta["data"]
                     # print(type(data), data)
                     ipv4_prefixes = data["ipv4_prefixes"]
-                    print(type(ipv4_prefixes))
-                    print(len(ipv4_prefixes))
+                    # print(type(ipv4_prefixes))
+                    # print(len(ipv4_prefixes))
                     ipv6_prefixes = data["ipv6_prefixes"]
                     # print(type(ipv6_prefixes), ipv6_prefixes)
 
                     # print(len(ipv4_prefixes))
 
                     for prefix in ipv4_prefixes:
-                        print(type(prefix)) # dict
-                        print(prefix)
-                        input()
-                    break
-                elif status_code == "error":
-                    # meta = web_request.json()
-                    print(f"Oops I did it again {asn_prefixes_api}")
+                        # print(type(prefix)) # dict
+                        # print(prefix)
+                        for k, v in prefix.items():
+                            if type(v) == dict:
+                                parent = v
+                                for k2, v2 in parent.items():
+                                    # print(v2)
+                                    if k2 == "prefix" and v2 != None:
+                                        super_net = v2
+                                        print(super_net)
+                                        print()
+                                        # input()
+                            elif k == "prefix":
+                                ipv4_subnet = v
+                                print(ipv4_subnet)
+                            elif k == "name":
+                                ipv4_subnet_name = v
+                                print(ipv4_subnet_name)
+                            elif k == "description":
+                                ipv4_subet_description = v
+                                print(ipv4_subet_description)
+                            elif k == "country_code":
+                                ipv4_subnet_country = v
+                                print(ipv4_subnet_country)
+
                     break
 
         # except KeyError:
@@ -172,7 +193,8 @@ if __name__ == "__main__":
     # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    t1.get_asn_prefixes("1")
+    t1.get_asn_prefixes("andy")
+    t1.get_asn_prefixes(1)
     # t1.get_asn_prefixes("11")
     # t1.get_asn_prefixes("a")
 
