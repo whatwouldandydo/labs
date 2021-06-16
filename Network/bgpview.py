@@ -135,40 +135,59 @@ class BGPView:
                     break
                 elif status_code == "ok":
                     data = meta["data"]
-                    # print(type(data), data)
                     ipv4_prefixes = data["ipv4_prefixes"]
-                    # print(type(ipv4_prefixes))
-                    # print(len(ipv4_prefixes))
                     ipv6_prefixes = data["ipv6_prefixes"]
-                    # print(type(ipv6_prefixes), ipv6_prefixes)
+                    
+                    ipv4_parent_prefixes = []
 
-                    # print(len(ipv4_prefixes))
-
-                    for prefix in ipv4_prefixes:
+                    for _ in ipv4_prefixes:
                         # print(type(prefix)) # dict
                         # print(prefix)
-                        for k, v in prefix.items():
+                        for k, v in _.items():
                             if type(v) == dict:
-                                parent = v
-                                for k2, v2 in parent.items():
-                                    # print(v2)
-                                    if k2 == "prefix" and v2 != None:
-                                        super_net = v2
-                                        print(super_net)
-                                        print()
-                                        # input()
+                                if v["prefix"] != None:
+
+                                # parent = v["prefix"]
+                                    parent = v["prefix"]
+                                    print(type(parent))
+                                    # print(parent)
+                                    ipv4_parent_prefixes.append(parent)
+                                    # input()
+
+                                
+                                # for k2, v2 in parent.items():
+                                #     # print(v2)
+                                #     ipv4_parent_prefixes = []
+                                #     if k2 == "prefix" and v2 != None:
+                                #         super_net = list(v2)
+                                #         ipv4_parent_prefixes.append(super_net)
+                                #         # print(type(super_net), super_net)
+                                #         # print()
+                                #         # input()
+                                # # super_net.append(self.ipv4_parent_prefixes)
+                                # # print(super_net)
+                                #         # ipv4_parent_prefixes.append(super_net)
+                                #     # print(ipv4_parent_prefixes)
                             elif k == "prefix":
                                 ipv4_subnet = v
-                                print(ipv4_subnet)
+                                # print(ipv4_subnet)
                             elif k == "name":
                                 ipv4_subnet_name = v
-                                print(ipv4_subnet_name)
+                                # print(ipv4_subnet_name)
                             elif k == "description":
                                 ipv4_subet_description = v
-                                print(ipv4_subet_description)
+                                # print(ipv4_subet_description)
                             elif k == "country_code":
                                 ipv4_subnet_country = v
-                                print(ipv4_subnet_country)
+                                # print(ipv4_subnet_country)
+
+                    print(ipv4_parent_prefixes)
+
+                    # Remove parent prefixes from list
+                    self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
+                    print(self.ipv4_parent_prefixes)
+
+
 
                     break
 
