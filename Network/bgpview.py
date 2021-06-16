@@ -117,9 +117,7 @@ class BGPView:
     def get_asn_prefixes(self, as_number):
         """ Get prefixes IPv4 and IPv6 from the AS number """
         asn_prefixes_api = self.asn_prefixes_api.replace("as_number", str(as_number))
-        print(asn_prefixes_api)
         web_request = requests.get(f"{asn_prefixes_api}", verify=False)
-        print(web_request)
 
         # Get IPv4 data from ipv4_prefixes array
         ipv4_parent_prefixes = []
@@ -127,6 +125,13 @@ class BGPView:
         ipv4_subnet_name = []
         ipv4_subet_description = []
         ipv4_subnet_country = []
+
+        # Get IPv6 data from ipv6_prefixes array
+        ipv6_parent_prefixes = []
+        ipv6_subnet = []
+        ipv6_subnet_name = []
+        ipv6_subet_description = []
+        ipv6_subnet_country = []
 
         # When API request fails, retry it 3 times with 3 seconds wait
         query_count = 0
@@ -146,7 +151,7 @@ class BGPView:
                     ipv4_prefixes = data["ipv4_prefixes"]
                     ipv6_prefixes = data["ipv6_prefixes"]
 
-                    # For through IPv4 array
+                    # Loop through IPv4 array
                     for _ in ipv4_prefixes:
                         for k, v in _.items():
                             if type(v) == dict:
@@ -162,24 +167,55 @@ class BGPView:
                             elif k == "country_code":
                                 ipv4_subnet_country.append(v)
 
+                    # Loop through IPv6 array
+                    for _ in ipv6_prefixes:
+                        for k, v in _.items():
+                            if type(v) == dict:
+                                if v["prefix"] != None:
+                                    parent = v["prefix"]
+                                    ipv6_parent_prefixes.append(parent)
+                            elif k == "prefix":
+                                ipv6_subnet.append(v)
+                            elif k == "name":
+                                ipv6_subnet_name.append(v)
+                            elif k == "description":
+                                ipv6_subet_description.append(v)
+                            elif k == "country_code":
+                                ipv6_subnet_country.append(v)
                 break
 
+        else:
+            print(f"ERROR {web_request}: Try to access {asn_prefixes_api} three times but fail.\n")
+
+        # Combining IPv4 prefix, description, and country in 1 line
         ipv4_prefixes_info = []
         for number in range(len(ipv4_subnet)):
-
             ip = str(ipv4_subnet[number])
             name = str(ipv4_subet_description[number])
             country = str(ipv4_subnet_country[number])
             ip_data = f"{ip} = {name} ({country})"
             ipv4_prefixes_info.append(ip_data)
 
-        # Remove parent prefixes or supernet from list
+        # Combining IPv6 prefix, description, and country in 1 line
+        ipv6_prefixes_info = []
+        for number in range(len(ipv6_subnet)):
+            ip = str(ipv6_subnet[number])
+            name = str(ipv6_subet_description[number])
+            country = str(ipv6_subnet_country[number])
+            ip_data = f"{ip} = {name} ({country})"
+            ipv6_prefixes_info.append(ip_data)
+
+        # Remove duplicate IPv4 parent prefixes or supernet from list
         self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
 
-        # IPv4 Prefixes info such as owner and country
+        # IPv4 Prefixes instance info such as owner and country
         self.ipv4_prefixes_info = ipv4_prefixes_info
 
+        # Remove duplicate IPv6 parent prefixes or supernet from list
+        self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
 
+        # IPv6 Prefixes instance info such as owner and country
+        self.ipv6_prefixes_info = ipv6_prefixes_info
 
 
 
@@ -200,27 +236,12 @@ if __name__ == "__main__":
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
     t1.get_asn_prefixes("andy")
-    t1.get_asn_prefixes(1)
-    print(t1.ipv4_prefixes_info)
-    print(t1.ipv4_parent_prefixes)
-    # print(t1.ipv4_subnet)
-    # for item in t1.ipv4_subnet:
-    #     print(item)
-    #     input()
-    # t1.get_asn_prefixes("11")
-    # t1.get_asn_prefixes("a")
-
-    # print()
-    # t2 = BGPView()
-    # t2.get_asn("ad")
-    # print(t2.asn_number, t2.asn_name, t2.asn_country_code)
-    # t2.get_asn(222)
-    # print(t2.asn_number, t2.asn_name, t2.asn_country_code)
-
-    # print()
-    # t3 = BGPView()
-    # print(t3.asn)
-    # print(t3.status)
+    t1.get_asn_prefixes(61138)
+    # print(t1.ipv4_prefixes_info)
+    # pprint(t1.ipv4_parent_prefixes)
+    print()
+    print(t1.ipv6_parent_prefixes)
+    pprint(t1.ipv6_prefixes_info)
 
     # print()
     # import datetime
