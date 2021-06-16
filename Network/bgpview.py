@@ -116,28 +116,26 @@ class BGPView:
 
     def get_asn_prefixes(self, as_number):
         """ Get prefixes IPv4 and IPv6 from the AS number """
-        # try:
         asn_prefixes_api = self.asn_prefixes_api.replace("as_number", str(as_number))
         print(asn_prefixes_api)
         web_request = requests.get(f"{asn_prefixes_api}", verify=False)
         print(web_request)
 
+        # Get IPv4 data from ipv4_prefixes array
         ipv4_parent_prefixes = []
         ipv4_subnet = []
         ipv4_subnet_name = []
         ipv4_subet_description = []
         ipv4_subnet_country = []
 
+        # When API request fails, retry it 3 times with 3 seconds wait
         query_count = 0
         while query_count != 3:
             query_count += 1
             time.sleep(3)
 
-            # ipv4_parent_prefixes = []
-
             if web_request.status_code == 200:
                 meta = web_request.json()
-                # pprint(meta)
                 status_code = meta["status"]
 
                 if status_code == "error":
@@ -147,13 +145,9 @@ class BGPView:
                     data = meta["data"]
                     ipv4_prefixes = data["ipv4_prefixes"]
                     ipv6_prefixes = data["ipv6_prefixes"]
-                    
-                    # ipv4_parent_prefixes = []
-                    # ipv4_subnet = []
 
+                    # For through IPv4 array
                     for _ in ipv4_prefixes:
-                        # print(type(prefix)) # dict
-                        # print(prefix)
                         for k, v in _.items():
                             if type(v) == dict:
                                 if v["prefix"] != None:
@@ -162,42 +156,22 @@ class BGPView:
                             elif k == "prefix":
                                 ipv4_subnet.append(v)
                             elif k == "name":
-                                # self.ipv4_subnet_name = v
-                                # print(ipv4_subnet_name)
                                 ipv4_subnet_name.append(v)
                             elif k == "description":
-                                # self.ipv4_subet_description = v
-                                # print(ipv4_subet_description)
                                 ipv4_subet_description.append(v)
                             elif k == "country_code":
-                                # self.ipv4_subnet_country = v
-                                # print(ipv4_subnet_country)
-                                # print(self.ipv4_subnet_country)
                                 ipv4_subnet_country.append(v)
 
                 break
 
-                    # Remove parent prefixes from list
-        # self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
-            # print(self.ipv4_parent_prefixes)
-                    # print(ipv4_subnet)
-        # print(ipv4_subnet)
-        # self.ipv4_subnet = ipv4_subnet
-        # print(len(ipv4_subnet), len(ipv4_subnet_name), len(ipv4_subet_description), len(ipv4_subnet_country))
-
         ipv4_prefixes_info = []
         for number in range(len(ipv4_subnet)):
-            # print(number)
-            # ipv4_prefix.append(ipv4_subnet[number])
-            # ipv4_prefix.append(ipv4_subet_description[number])
+
             ip = str(ipv4_subnet[number])
             name = str(ipv4_subet_description[number])
             country = str(ipv4_subnet_country[number])
             ip_data = f"{ip} = {name} ({country})"
             ipv4_prefixes_info.append(ip_data)
-
-
-        # pprint(ipv4_prefixes_info)
 
         # Remove parent prefixes or supernet from list
         self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
@@ -206,12 +180,7 @@ class BGPView:
         self.ipv4_prefixes_info = ipv4_prefixes_info
 
 
-                # break
-        # return
 
-        # except KeyError:
-            # print(f"ERROR {web_request}: Try to access {asn_api} three times but fail.\n"
-            
 
 
 """
