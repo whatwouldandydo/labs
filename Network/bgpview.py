@@ -443,20 +443,36 @@ class BGPView:
         # Combing IPv4 downstream ASN, description, and country
         ipv4_downstream_peers_info = []
         for i in range(len(ipv4_downtream_as_numbers)):
-            asn = str(ipv4_downtream_as_numbers[i])
-            description = str(ipv4_downtream_as_descriptions[i])
-            country = str(ipv4_downtream_as_countries[i])
-            asn_data = f"{asn} ==> {description} ({country})"
-            ipv4_downstream_peers_info.append(asn_data)
+            if i == 0:
+                message = f"ASN {as_number} has no IPv4 downstream peer."
+                """
+                NEW FEATURE 1
+                Class or Method inheritance from get_asn() to instance self.asn_name
+                """
+                # message = f"ASN {as_number} {self.asn_name} has no IPv4 downstream peer."
+                ipv4_downstream_peers_info.append(message)
+            else:
+                asn = str(ipv4_downtream_as_numbers[i])
+                description = str(ipv4_downtream_as_descriptions[i])
+                country = str(ipv4_downtream_as_countries[i])
+                asn_data = f"{asn} ==> {description} ({country})"
+                ipv4_downstream_peers_info.append(asn_data)
 
         # Combing IPv6 downstream ASN, description, and country
         ipv6_downstream_peers_info = []
         for i in range(len(ipv6_downtream_as_numbers)):
-            asn = str(ipv6_downtream_as_numbers[i])
-            description = str(ipv6_downtream_as_descriptions[i])
-            country = str(ipv6_downtream_as_countries[i])
-            asn_data = f"{asn} ==> {description} ({country})"
-            ipv6_downstream_peers_info.append(asn_data)
+            if i == 0:
+                """
+                NEW FEATURE 1
+                """
+                message: f"ASN {as_number} has no IPv6 downstream peer."
+                ipv6_downstream_peers_info.append(message)
+            else:
+                asn = str(ipv6_downtream_as_numbers[i])
+                description = str(ipv6_downtream_as_descriptions[i])
+                country = str(ipv6_downtream_as_countries[i])
+                asn_data = f"{asn} ==> {description} ({country})"
+                ipv6_downstream_peers_info.append(asn_data)
         
         # IPv4 downstream peers information instance
         self.ipv4_downstream_peers_info = ipv4_downstream_peers_info
@@ -498,7 +514,7 @@ if __name__ == "__main__":
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
     t1.get_asn_downstreams("andy")
-    t1.get_asn_downstreams(1)
+    t1.get_asn_downstreams(2)
     # print(t1.ipv4_prefixes_info)
     # pprint(t1.ipv4_parent_prefixes)
     # print(t1.ipv6_parent_prefixes)
