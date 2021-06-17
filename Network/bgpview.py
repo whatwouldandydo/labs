@@ -579,8 +579,69 @@ class BGPView:
         # IX peer information instance
         self.ix_peers_info = ix_peers_info
 
-    def get_prefix(self, ip_addr, cidr):
-        pass
+    def get_prefix(self, ip_cidr):
+        """ Get prefix owner, ASN, address, and upstreams ASN """
+        prefix_api = self.prefix_api.replace("ip_address/cidr", str(ip_cidr))
+        web_request = requests.get(f"{prefix_api}", verify=False)
+
+        prefix = []
+        prefix_asn = []
+        description = []
+        whois_country_code = []
+        upstream_asn = []
+
+        # When API request fails, retry it 3 times with 3 seconds wait
+        query_try = 0
+        while query_try != 3:
+            query_try += 1
+            time.sleep(3)
+
+            if web_request.status_code == 200:
+                meta = web_request.json()
+                status_code = meta["status"]
+                status_message = meta["status_message"]
+
+                # Use "almforme" in status_message to catch wile (Mm)alformed
+                if status_code == "error" and "alformed" in status_message:
+                    print(f"ERORR: {ip_cidr} is not a valid prefix.")
+                elif status_code == "ok":
+                    data = meta["data"]
+                    prefix.append(data["prefix"])
+                    description.append(data["description_short"])
+                    whois_country_code.append(data["country_codes"]["whois_country_code"])
+                    asn = data["asns"]
+
+                    # Loop through 1st dict array
+                    for _ in asn:
+                        for k, v in _.items():
+                            if k == "asn":
+                                prefix_asn = v
+                            elif k == "description":
+                                description.append(v)
+                            elif k == "country_code":
+                                whois_country_code.append(v)
+                            elif k == "prefix_upstreams":
+                                prefix_upstreams = v
+
+                                # Loop through nested dict arry getting upstream info
+                                for _ in prefix_upstreams:
+                                    for k, v in _.items():
+                                        if k == "asn":
+                                            up_asn = v
+                                        elif k == "description":
+                                            up_name = v
+                                        elif k == "country_code":
+                                            up_country = v
+                                            up_data = f"{up_asn} - {up_name} ({up_country})"
+                                            upstream_asn.append(up_data)
+            break
+
+        # IP prefixes information instance
+        self.prefix = prefix
+        self.prefix_asn = prefix_asn
+        self.description = description
+        self.whois_country_code = whois_country_code
+        self.upstream_asn = upstream_asn
 
     def get_ip_address(self, ip_addr):
         pass
@@ -608,8 +669,8 @@ if __name__ == "__main__":
     # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    t1.get_asn_ixs("andy")
-    t1.get_asn_ixs(18119)
+    # t1.get_asn_ixs("andy")
+    # t1.get_asn_ixs(18119)
     # print(t1.ipv4_prefixes_info)
     # pprint(t1.ipv4_parent_prefixes)
     # print(t1.ipv6_parent_prefixes)
@@ -620,10 +681,13 @@ if __name__ == "__main__":
     # print(t1.ipv6_downstream_peers_info)
     # print(t1.ipv4_downstream_peers_info)
 
-    for i in range(20000):
-        t1.get_asn_ixs(i)
-        print(f"AS Number: {i}")
-        print()
+    t1.get_prefix("192.209.63.0/24")
+    print(t1.prefix, t1.prefix_asn, t1.description, t1.whois_country_code, t1.upstream_asn)
+
+    # for i in range(20000):
+    #     t1.get_asn_ixs(i)
+    #     print(f"AS Number: {i}")
+    #     print()
 
 
     # print()
