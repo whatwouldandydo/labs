@@ -64,8 +64,6 @@ class BGPView:
         # ASN last updated date
         self.asn_date_updated = None
 
-        # self.ipv4_subnet = None
-
     def get_asn(self, *as_number):
         """
         Allow as many AS number as input and find ASN
@@ -75,9 +73,7 @@ class BGPView:
         for number in as_number:
             try:
                 asn_api = self.asn_api.replace("as_number", str(number))
-                print(asn_api)
                 web_request = requests.get(f"{asn_api}", verify=False)
-                # print(web_request) # <Response [200]>
                 
                 # When API request fails, retry it 3 times with 3 seconds wait
                 query_count = 0
@@ -144,7 +140,7 @@ class BGPView:
                 status_code = meta["status"]
 
                 if status_code == "error":
-                    print(f"ERORR: {as_number} is not a valid.")
+                    print(f"ERORR: {as_number} is not a valid number.")
                     break
                 elif status_code == "ok":
                     data = meta["data"]
@@ -217,6 +213,90 @@ class BGPView:
         # IPv6 Prefixes instance info such as owner and country
         self.ipv6_prefixes_info = ipv6_prefixes_info
 
+    def get_asn_peers(self, as_number):
+        """ Get ASN IPv4 and IPv6 peering partners"""
+        asn_peers_api = self.asn_peers_api.replace("as_number", str(as_number))
+        web_request = requests.get(f"{asn_peers_api}", verify=False)
+
+        ipv4_remote_asn_numbers = []
+        ipv4_remote_asn_names = []
+        ipv4_remote_asn_descriptions = []
+        ipv4_remote_asn_countries = []
+
+        ipv6_remote_asn_numbers = []
+        ipv6_remote_asn_names = []
+        ipv6_remote_asn_descriptions = []
+        ipv6_remote_asn_countries = []
+
+        # When API request fails, retry it 3 times with 3 seconds wait
+        query_try = 0
+        while query_try != 3:
+            query_try += 1
+            time.sleep(3)
+
+            if web_request.status_code == 200:
+                meta = web_request.json()
+                status_code = meta["status"]
+                print(status_code)
+
+                if status_code == "error":
+                    print(f"ERROR: {as_number} is not a valid number.")
+                elif status_code == "ok":
+                    data = meta["data"]
+                    ipv4_peers = data["ipv4_peers"]
+                    ipv6_peers = data["ipv6_peers"]
+
+                    # Loop through IPv4 peers array
+                    for _ in ipv4_peers:
+                        for k, v in _.items():
+                            if k == "asn":
+                                ipv4_remote_asn_numbers.append(v)
+                            elif k == "name":
+                                ipv4_remote_asn_names.append(v)
+                            elif k == "description":
+                                ipv4_remote_asn_descriptions.append(v)
+                            elif k == "country_code":
+                                ipv4_remote_asn_countries.append(v)
+
+                    # Loop through IPv6 peers array
+                    for _ in ipv6_peers:
+                        for k, v in _.items():
+                            if k == "asn":
+                                ipv6_remote_asn_numbers.append(v)
+                            elif k == "name":
+                                ipv6_remote_asn_names.append(v)
+                            elif k == "description":
+                                ipv6_remote_asn_descriptions.append(v)
+                            elif k == "country_code":
+                                ipv6_remote_asn_countries.append(v)
+                break
+        else:
+            print(f"ERROR {web_request}: Try to access {asn_peers_api} three times but fail.\n")
+
+        # Combing IPv4 peer ASN, description, and country
+        ipv4_remote_peers_info = []
+        for i in range(len(ipv4_remote_asn_numbers)):
+            asn = str(ipv4_remote_asn_numbers[i])
+            description = str(ipv4_remote_asn_descriptions[i])
+            country = str(ipv4_remote_asn_countries[i])
+            asn_data = f"{asn} ==> {description} ({country})"
+            ipv4_remote_peers_info.append(asn_data)
+
+        # Combing IPv6 peer ASN, description, and country
+        ipv6_remote_peers_info = []
+        for i in range(len(ipv6_remote_asn_numbers)):
+            asn = str(ipv6_remote_asn_numbers[i])
+            description = str(ipv6_remote_asn_descriptions[i])
+            country = str(ipv6_remote_asn_countries[i])
+            asn_data = f"{asn} ==> {description} ({country})"
+            ipv6_remote_peers_info.append(asn_data)
+
+        # IPv4 remote peer information instance
+        self.ipv4_remote_peers_info = ipv4_remote_peers_info
+
+        # IPv6 remote peer information instance
+        self.ipv6_remote_peers_info = ipv6_remote_peers_info
+
 
 
 """
@@ -235,13 +315,14 @@ if __name__ == "__main__":
     # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    t1.get_asn_prefixes("andy")
-    t1.get_asn_prefixes(61138)
+    t1.get_asn_peers("andy")
+    t1.get_asn_peers(61138)
     # print(t1.ipv4_prefixes_info)
     # pprint(t1.ipv4_parent_prefixes)
-    print()
-    print(t1.ipv6_parent_prefixes)
-    pprint(t1.ipv6_prefixes_info)
+    # print()
+    # print(t1.ipv6_parent_prefixes)
+    # pprint(t1.ipv6_prefixes_info)
+    print(t1.ipv6_remote_peers_info)
 
     # print()
     # import datetime
