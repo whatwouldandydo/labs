@@ -76,9 +76,9 @@ class BGPView:
                 web_request = requests.get(f"{asn_api}", verify=False)
                 
                 # When API request fails, retry it 3 times with 3 seconds wait
-                query_count = 0
-                while query_count != 3:
-                    query_count += 1
+                query_try = 0
+                while query_try != 3:
+                    query_try += 1
                     time.sleep(3)
 
                     if web_request.status_code == 200:
@@ -130,9 +130,9 @@ class BGPView:
         ipv6_subnet_countries = []
 
         # When API request fails, retry it 3 times with 3 seconds wait
-        query_count = 0
-        while query_count != 3:
-            query_count += 1
+        query_try = 0
+        while query_try != 3:
+            query_try += 1
             time.sleep(3)
 
             if web_request.status_code == 200:
@@ -297,6 +297,107 @@ class BGPView:
         # IPv6 remote peer information instance
         self.ipv6_remote_peers_info = ipv6_remote_peers_info
 
+    def get_asn_upstreams(self, as_number):
+        """ Get Upstream BGP AS number, names, and countries"""
+        asn_upstreams_api = self.asn_upstreams_api.replace("as_number", str(as_number))
+        web_request = requests.get(f"{asn_upstreams_api}", verify=False)
+
+        ipv4_upstream_as_numbers = []
+        ipv4_upstream_as_names = []
+        ipv4_upstream_as_descriptions = []
+        ipv4_upstream_as_countries = []
+
+        ipv6_upstream_as_numbers = []
+        ipv6_upstream_as_names = []
+        ipv6_upstream_as_descriptions = []
+        ipv6_upstream_as_countries = []
+
+        # When API request fails, retry it 3 times with 3 seconds wait
+        query_try = 0
+        while query_try != 3:
+            query_try += 1
+            time.sleep(3)
+
+            if web_request.status_code == 200:
+                meta = web_request.json()
+                status_code = meta["status"]
+
+                if status_code == "error":
+                    print(f"ERORR: {as_number} is not a valid number.")
+                elif status_code == "ok":
+                    data = meta["data"]
+                    ipv4_upstreams = data["ipv4_upstreams"]
+                    ipv6_upstreams = data["ipv6_upstreams"]
+
+                    # Loop through IPv4 upstream array
+                    for _ in ipv4_upstreams:
+                        for k, v in _.items():
+                            if k == "asn":
+                                ipv4_upstream_as_numbers.append(v)
+                            elif k == "name":
+                                ipv4_upstream_as_names.append(v)
+                            elif k == "description":
+                                ipv4_upstream_as_descriptions.append(v)
+                            elif k == "country_code":
+                                ipv4_upstream_as_countries.append(v)
+
+                    # Loop through IPv6 upstream array
+                    for _ in ipv6_upstreams:
+                        for k, v in _.items():
+                            if k == "asn":
+                                ipv6_upstream_as_numbers.append(v)
+                            elif k == "name":
+                                ipv6_upstream_as_names.append(v)
+                            elif k == "description":
+                                ipv6_upstream_as_descriptions.append(v)
+                            elif k == "country_code":
+                                ipv6_upstream_as_countries.append(v)
+                break
+        else:
+            print(f"ERROR {web_request}: Try to access {asn_upstreams_api} three times but fail.\n")
+        
+        # Combing IPv4 upstream ASN, description, and country
+        ipv4_upstream_peers_info = []
+        for i in range(len(ipv4_upstream_as_numbers)):
+            asn = str(ipv4_upstream_as_numbers[i])
+            description = str(ipv4_upstream_as_descriptions[i])
+            country = str(ipv4_upstream_as_countries[i])
+            asn_data = f"{asn} ==> {description} ({country})"
+            ipv4_upstream_peers_info.append(asn_data)
+
+        # Combing IPv6 upstream ASN, description, and country
+        ipv6_upstream_peers_info = []
+        for i in range(len(ipv6_upstream_as_numbers)):
+            asn = str(ipv6_upstream_as_numbers[i])
+            description = str(ipv6_upstream_as_descriptions[i])
+            country = str(ipv6_upstream_as_countries[i])
+            asn_data = f"{asn} ==> {description} ({country})"
+            ipv6_upstream_peers_info.append(asn_data)
+
+        # IPv4 upstream peers information instance
+        self.ipv4_upstream_peers_info = ipv4_upstream_peers_info
+
+        # IPv6 upstream peers information instance
+        self.ipv6_upstream_peers_info = ipv6_upstream_peers_info
+
+    def get_asn_downstreams(self, as_number):
+        pass
+
+    def get_asn_ixs(self, as_number):
+        pass
+
+    def get_prefix(self, ip_addr, cidr):
+        pass
+
+    def get_ip_address(self, ip_addr):
+        pass
+
+    def get_internet_exchange(self, as_number):
+        pass
+
+    def get_api_search(self, content):
+        pass
+
 
 
 """
@@ -315,14 +416,16 @@ if __name__ == "__main__":
     # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    t1.get_asn_prefixes("andy")
-    t1.get_asn_prefixes(61138)
+    t1.get_asn_upstreams("andy")
+    t1.get_asn_upstreams(62240)
     # print(t1.ipv4_prefixes_info)
     # pprint(t1.ipv4_parent_prefixes)
     # print()
     # print(t1.ipv6_parent_prefixes)
     # pprint(t1.ipv6_prefixes_info)
-    print(t1.ipv6_prefixes_info)
+    # print(t1.ipv6_prefixes_info)
+    print(t1.ipv4_upstream_peers_info)
+    print(t1.ipv6_upstream_peers_info)
 
     # print()
     # import datetime
