@@ -481,7 +481,103 @@ class BGPView:
         self.ipv6_downstream_peers_info = ipv6_downstream_peers_info 
 
     def get_asn_ixs(self, as_number):
-        pass
+        """
+        Get Internet Exchange remote peers information
+        such as AS number, name, IPv4/IPv6 peering addresses,
+        city, country, and speed
+        """
+        asn_ixs_api = self.asn_ixs_api.replace("as_number", str(as_number))
+        web_request = requests.get(f"{asn_ixs_api}", verify=False)
+
+        ix_id = []
+        name = []
+        full_name = []
+        city = []
+        country = []
+        ipv4_address = []
+        ipv6_address = []
+        speed = []
+
+        # When API request fails, retry it 3 times with 3 seconds wait
+        query_try = 0
+        while query_try != 3:
+            query_try += 1
+            time.sleep(3)
+
+            if web_request.status_code == 200:
+                meta = web_request.json()
+                status_code = meta["status"]
+
+                if status_code == "error":
+                    print(f"ERORR: {as_number} is not a valid number.")
+                elif status_code == "ok":
+                    data = meta["data"]
+
+                    # Loop through list with condition to catch
+                    # None from the value
+                    for _ in data:
+                        for k, v in _.items():
+                            if k == "ix_id":
+                                ix_id.append(v)
+                            elif k == "name":
+                                if v is not None:
+                                    name.append(v)
+                                else:
+                                    name.append("None")
+                            elif k == "name_full":
+                                if v is not None:
+                                    full_name.append(v)
+                                else:
+                                    full_name.append("None")
+                            elif k == "city":
+                                if v is not None:
+                                    city.append(v)
+                                else:
+                                    city.append("None")
+                            elif k == "country_code":
+                                if v is not None:
+                                    country.append(v)
+                                else:
+                                    country.append("None")
+                            elif k == "ipv4_address":
+                                if v is not None:
+                                    ipv4_address.append(v)
+                                else:
+                                    ipv4_address.append("None")
+                            elif k == "ipv6_address":
+                                if v is not None:
+                                    ipv6_address.append(v)
+                                else:
+                                    ipv6_address.append("None")
+                            elif k == "speed":
+                                if v == 0:
+                                    speed.append("None")
+                                elif v is not None:
+                                    speed.append(v)
+                                else:
+                                    speed.append("None")               
+                break
+            else:
+                print(f"ERROR {web_request}: Try to access {asn_ixs_api} three times but fail.\n")
+
+        ix_peers_info = []
+        for i in range(len(ix_id)):
+            if i == 0:
+                message = f"Internet Exchange AS {as_number} has no peering partner."
+                ix_peers_info.append(message)
+            else:
+                ix_asn = str(ix_id[i])
+                ix_name = str(name[i])
+                ix_city = str(city[i])
+                ix_country = str(country[i])
+                ix_ipv4 = str(ipv4_address[i])
+                ix_ipv6 = str(ipv6_address[i])
+                ix_speed = str(speed[i])
+                ix_data = f"{ix_asn} ==> {ix_name} | {ix_city} | {ix_ipv4}/{ix_ipv6} | {ix_speed}"
+                ix_peers_info.append(ix_data)
+        
+        # IX peer information instance
+        self.ix_peers_info = ix_peers_info
 
     def get_prefix(self, ip_addr, cidr):
         pass
@@ -500,7 +596,6 @@ class BGPView:
 """
 3. Can not get all the  instances from get_asn(3000,4000).
 Only retreive instances from the last 4000
-
 https://api.bgpview.io/asn/3000
 https://api.bgpview.io/asn/4000
 4000 Sprint International ok
@@ -513,8 +608,8 @@ if __name__ == "__main__":
     # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    t1.get_asn_downstreams("andy")
-    t1.get_asn_downstreams(2)
+    t1.get_asn_ixs("andy")
+    t1.get_asn_ixs(18119)
     # print(t1.ipv4_prefixes_info)
     # pprint(t1.ipv4_parent_prefixes)
     # print(t1.ipv6_parent_prefixes)
@@ -522,8 +617,14 @@ if __name__ == "__main__":
     # print(t1.ipv6_prefixes_info)
     # print(t1.ipv4_upstream_peers_info)
     # print(t1.ipv6_upstream_peers_info)
-    print(t1.ipv6_downstream_peers_info)
-    print(t1.ipv4_downstream_peers_info)
+    # print(t1.ipv6_downstream_peers_info)
+    # print(t1.ipv4_downstream_peers_info)
+
+    for i in range(20000):
+        t1.get_asn_ixs(i)
+        print(f"AS Number: {i}")
+        print()
+
 
     # print()
     # import datetime
