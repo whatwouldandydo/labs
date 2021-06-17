@@ -575,7 +575,7 @@ class BGPView:
                 ix_speed = str(speed[i])
                 ix_data = f"{ix_asn} ==> {ix_name} | {ix_city} | {ix_ipv4}/{ix_ipv6} | {ix_speed}"
                 ix_peers_info.append(ix_data)
-        
+                
         # IX peer information instance
         self.ix_peers_info = ix_peers_info
 
@@ -636,7 +636,7 @@ class BGPView:
                                             upstream_asn.append(up_data)
             break
 
-        # IP prefixes information instance
+        # IP prefixes information instances
         self.prefix = prefix
         self.prefix_asn = prefix_asn
         self.description = description
@@ -644,7 +644,68 @@ class BGPView:
         self.upstream_asn = upstream_asn
 
     def get_ip_address(self, ip_addr):
-        pass
+        """ Get public IP address owner, ASN, and country"""
+        ip_api = self.ip_api.replace("ip_address", str(ip_addr))
+        web_request = requests.get(f"{ip_api}", verify=False)
+
+        ip_prefix = []
+        ip_asn = []
+        ip_name = []
+        ip_country = []
+        ip_address_whois_info = []
+
+        query_try = 0
+        while query_try != 3:
+            query_try += 1
+            time.sleep(3)
+
+            if web_request.status_code == 200:
+                meta = web_request.json()
+                status = meta["status"]
+                status_message = meta["status_message"]
+
+                if status == "error":
+                    print(f"ERORR: {ip_addr} is not a valid IP address.")
+                elif status == "ok" and "successful" in status_message:
+                    data = meta["data"]["prefixes"]
+
+                    # Loop through nested array and assign Null as None
+                    # to make sure each appended list len() is the same
+                    for _ in data:
+                        for k, v in _.items():
+                            if type(v) == dict:
+                                if v["asn"] is not None:
+                                    ip_asn.append(v["asn"])
+                                else:
+                                    ip_asn.append("None")
+                                if v["description"] is not None:
+                                    ip_name.append(v["description"])
+                                else:
+                                    ip_name.append("None")
+                                if v["country_code"] is not None:
+                                    ip_country.append(v["country_code"])
+                                else:
+                                    ip_country.append("None")
+                            elif k == "prefix":
+                                ip_prefix.append(v)
+                break
+
+        # Combing indivual prefix, asn, name, country 
+        ip_address_whois_info = []
+        for i in range(len(ip_prefix)):
+            ip = str(ip_prefix[i])
+            asn = str(ip_asn[i])
+            name = str(ip_name[i])
+            country = str(ip_country[i])
+            ip_data = f"({ip}, {asn}, {name}, {country})"
+            ip_address_whois_info.append(ip_data)
+
+        # IP address information instances
+        self.ip_prefix = ip_prefix
+        self.ip_asn = ip_asn
+        self.ip_name = ip_name
+        self.ip_country = ip_country
+        self.ip_address_whois_info = ip_address_whois_info
 
     def get_internet_exchange(self, as_number):
         pass
@@ -681,8 +742,8 @@ if __name__ == "__main__":
     # print(t1.ipv6_downstream_peers_info)
     # print(t1.ipv4_downstream_peers_info)
 
-    t1.get_prefix("192.209.63.0/24")
-    print(t1.prefix, t1.prefix_asn, t1.description, t1.whois_country_code, t1.upstream_asn)
+    t1.get_ip_address("2a05:dfc7:60::")
+    print(t1.ip_prefix, t1.ip_asn, t1.ip_name, t1.ip_country, t1.ip_address_whois_info)
 
     # for i in range(20000):
     #     t1.get_asn_ixs(i)
