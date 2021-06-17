@@ -117,17 +117,17 @@ class BGPView:
 
         # Get IPv4 data from ipv4_prefixes array
         ipv4_parent_prefixes = []
-        ipv4_subnet = []
-        ipv4_subnet_name = []
-        ipv4_subet_description = []
-        ipv4_subnet_country = []
+        ipv4_subnets = []
+        ipv4_subnet_names = []
+        ipv4_subnet_descriptions = []
+        ipv4_subnet_countries = []
 
         # Get IPv6 data from ipv6_prefixes array
         ipv6_parent_prefixes = []
-        ipv6_subnet = []
-        ipv6_subnet_name = []
-        ipv6_subet_description = []
-        ipv6_subnet_country = []
+        ipv6_subnets = []
+        ipv6_subnet_names = []
+        ipv6_subnet_descriptions = []
+        ipv6_subnet_countries = []
 
         # When API request fails, retry it 3 times with 3 seconds wait
         query_count = 0
@@ -155,13 +155,13 @@ class BGPView:
                                     parent = v["prefix"]
                                     ipv4_parent_prefixes.append(parent)
                             elif k == "prefix":
-                                ipv4_subnet.append(v)
+                                ipv4_subnets.append(v)
                             elif k == "name":
-                                ipv4_subnet_name.append(v)
+                                ipv4_subnet_names.append(v)
                             elif k == "description":
-                                ipv4_subet_description.append(v)
+                                ipv4_subnet_descriptions.append(v)
                             elif k == "country_code":
-                                ipv4_subnet_country.append(v)
+                                ipv4_subnet_countries.append(v)
 
                     # Loop through IPv6 array
                     for _ in ipv6_prefixes:
@@ -171,13 +171,13 @@ class BGPView:
                                     parent = v["prefix"]
                                     ipv6_parent_prefixes.append(parent)
                             elif k == "prefix":
-                                ipv6_subnet.append(v)
+                                ipv6_subnets.append(v)
                             elif k == "name":
-                                ipv6_subnet_name.append(v)
+                                ipv6_subnet_names.append(v)
                             elif k == "description":
-                                ipv6_subet_description.append(v)
+                                ipv6_subnet_descriptions.append(v)
                             elif k == "country_code":
-                                ipv6_subnet_country.append(v)
+                                ipv6_subnet_countries.append(v)
                 break
 
         else:
@@ -185,19 +185,19 @@ class BGPView:
 
         # Combining IPv4 prefix, description, and country in 1 line
         ipv4_prefixes_info = []
-        for number in range(len(ipv4_subnet)):
-            ip = str(ipv4_subnet[number])
-            name = str(ipv4_subet_description[number])
-            country = str(ipv4_subnet_country[number])
+        for i in range(len(ipv4_subnets)):
+            ip = str(ipv4_subnets[i])
+            name = str(ipv4_subnet_descriptions[i])
+            country = str(ipv4_subnet_countries[i])
             ip_data = f"{ip} = {name} ({country})"
             ipv4_prefixes_info.append(ip_data)
 
         # Combining IPv6 prefix, description, and country in 1 line
         ipv6_prefixes_info = []
-        for number in range(len(ipv6_subnet)):
-            ip = str(ipv6_subnet[number])
-            name = str(ipv6_subet_description[number])
-            country = str(ipv6_subnet_country[number])
+        for i in range(len(ipv6_subnets)):
+            ip = str(ipv6_subnets[i])
+            name = str(ipv6_subnet_descriptions[i])
+            country = str(ipv6_subnet_countries[i])
             ip_data = f"{ip} = {name} ({country})"
             ipv6_prefixes_info.append(ip_data)
 
@@ -315,14 +315,14 @@ if __name__ == "__main__":
     # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
     # t1.get_asn(3000, 4000)
     # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    t1.get_asn_peers("andy")
-    t1.get_asn_peers(61138)
+    t1.get_asn_prefixes("andy")
+    t1.get_asn_prefixes(61138)
     # print(t1.ipv4_prefixes_info)
     # pprint(t1.ipv4_parent_prefixes)
     # print()
     # print(t1.ipv6_parent_prefixes)
     # pprint(t1.ipv6_prefixes_info)
-    print(t1.ipv6_remote_peers_info)
+    print(t1.ipv6_prefixes_info)
 
     # print()
     # import datetime
