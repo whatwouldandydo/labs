@@ -797,42 +797,23 @@ https://api.bgpview.io/asn/4000
 
 
 if __name__ == "__main__":
-    print()
     t1 = BGPView()
-    # t1.get_asn(1,100,"dfsd",555.55,"666.abc","xyz.987")
-    # t1.get_asn(3000, 4000)
-    # print(t1.asn_number, t1.asn_name, t1.asn_country_code)
-    # t1.get_asn_ixs("andy")
-    # t1.get_asn_ixs(18119)
-    # print(t1.ipv4_prefixes_info)
-    # pprint(t1.ipv4_parent_prefixes)
-    # print(t1.ipv6_parent_prefixes)
-    # pprint(t1.ipv6_prefixes_info)
-    # print(t1.ipv6_prefixes_info)
-    # print(t1.ipv4_upstream_peers_info)
-    # print(t1.ipv6_upstream_peers_info)
-    # print(t1.ipv6_downstream_peers_info)
-    # print(t1.ipv4_downstream_peers_info)
-
     t1.get_internet_exchange(453)
     print(t1.ix_id_number, t1.ix_name, t1.ix_city, t1.ix_country)
+    print()
 
+
+    import datetime
+    d1 = datetime.datetime.now()
+    t2 = BGPView()
+    t2.get_internet_exchange(1)
+    print(t2.ix_name)
     for i in range(20000):
-        t1.get_internet_exchange(i)
-        print(f"AS Number: {i}")
-        print(t1.ix_id_number, t1.ix_name, t1.ix_city, t1.ix_country)
+        d2 = datetime.datetime.now()
+        t2.get_internet_exchange(i)
+        print(f"Count #{i}:")
+        print(t2.ix_id_number, t2.ix_name, t2.ix_city, t2.ix_country)
+        d3 = datetime.datetime.now()
+        print(d2 - d1)
+        print(d3 - d2)
         print()
-
-
-    # print()
-    # import datetime
-    # d1 = datetime.datetime.now()
-    # t4 = BGPView()
-    # for i in range(5):
-    #     d2 = datetime.datetime.now()
-    #     t4.get_asn(i)
-    #     print(t4.asn_number,t4.asn_name,t4.asn_country_code)
-    #     d3 = datetime.datetime.now()
-    #     print(d2 - d1)
-    #     print(d3 - d2)
-    #     print()
