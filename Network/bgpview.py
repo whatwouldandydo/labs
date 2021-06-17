@@ -140,7 +140,7 @@ class BGPView:
                 status_code = meta["status"]
 
                 if status_code == "error":
-                    print(f"ERORR: {as_number} is not a valid number.")
+                    print(f"ERROR: {as_number} is not a valid number.")
                     break
                 elif status_code == "ok":
                     data = meta["data"]
@@ -323,7 +323,7 @@ class BGPView:
                 status_code = meta["status"]
 
                 if status_code == "error":
-                    print(f"ERORR: {as_number} is not a valid number.")
+                    print(f"ERROR: {as_number} is not a valid number.")
                 elif status_code == "ok":
                     data = meta["data"]
                     ipv4_upstreams = data["ipv4_upstreams"]
@@ -407,7 +407,7 @@ class BGPView:
                 status_code = meta["status"]
 
                 if status_code == "error":
-                    print(f"ERORR: {as_number} is not a valid number.")
+                    print(f"ERROR: {as_number} is not a valid number.")
                 elif status_code == "ok":
                     data = meta["data"]
                     ipv4_downstreams = data["ipv4_downstreams"]
@@ -509,7 +509,7 @@ class BGPView:
                 status_code = meta["status"]
 
                 if status_code == "error":
-                    print(f"ERORR: {as_number} is not a valid number.")
+                    print(f"ERROR: {as_number} is not a valid number.")
                 elif status_code == "ok":
                     data = meta["data"]
 
@@ -575,7 +575,7 @@ class BGPView:
                 ix_speed = str(speed[i])
                 ix_data = f"{ix_asn} ==> {ix_name} | {ix_city} | {ix_ipv4}/{ix_ipv6} | {ix_speed}"
                 ix_peers_info.append(ix_data)
-                
+
         # IX peer information instance
         self.ix_peers_info = ix_peers_info
 
@@ -603,7 +603,7 @@ class BGPView:
 
                 # Use "almforme" in status_message to catch wile (Mm)alformed
                 if status_code == "error" and "alformed" in status_message:
-                    print(f"ERORR: {ip_cidr} is not a valid prefix.")
+                    print(f"ERROR: {ip_cidr} is not a valid prefix.")
                 elif status_code == "ok":
                     data = meta["data"]
                     prefix.append(data["prefix"])
@@ -665,7 +665,7 @@ class BGPView:
                 status_message = meta["status_message"]
 
                 if status == "error":
-                    print(f"ERORR: {ip_addr} is not a valid IP address.")
+                    print(f"ERROR: {ip_addr} is not a valid IP address.")
                 elif status == "ok" and "successful" in status_message:
                     data = meta["data"]["prefixes"]
 
@@ -707,8 +707,80 @@ class BGPView:
         self.ip_country = ip_country
         self.ip_address_whois_info = ip_address_whois_info
 
-    def get_internet_exchange(self, as_number):
-        pass
+    def get_internet_exchange(self, ix_id_number):
+        """ Get Internet Exchange and its member ASN """
+        ix_api = self.ix_api.replace("ix_id", str(ix_id_number))
+        web_request = requests.get(f"{ix_api}", verify=False)
+
+        ix_asn_member = []
+        ix_asn_description = []
+        ix_asn_location = []
+        ix_asn_ipv4_address = []
+        ix_asn_ipv6_address = []
+        ix_asn_speed = []
+
+        query_try = 0
+        while query_try != 3:
+            query_try += 1
+            time.sleep(3)
+
+            if web_request.status_code == 200:
+                meta = web_request.json()
+                status = meta["status"]
+                status_message = meta["status_message"]
+
+                if status == "error":
+                    print(f'ERROR: {ix_id_number} is not a valid ID number.')
+                    print(f'API Status Message: "{status_message}"')
+                elif status == "ok" and "successful" in status_message:
+                    data = meta["data"]
+                    members = data["members"]
+
+                    self.ix_name = data["name_full"]
+                    self.ix_city = data["city"]
+                    self.ix_country = data["country_code"]
+
+                    for _ in members:
+                        for k, v in _.items():
+                            if k == "asn":
+                                if v is not None:
+                                    ix_asn_member.append(v)
+                                else:
+                                    ix_asn_member.append("N/A")
+                            elif k == "description":
+                                if v is not None:
+                                    ix_asn_description.append(v)
+                                else:
+                                    ix_asn_description.append("N/A")
+                            elif k == "country_code":
+                                if v is not None:
+                                    ix_asn_location.append(v)
+                                else:
+                                    ix_asn_location.append("N/A")
+                            elif k == "ipv4_address":
+                                if v is not None:
+                                    ix_asn_ipv4_address.append(v)
+                                else:
+                                    ix_asn_ipv4_address.append("N/A")
+                            elif k == "ipv6_address":
+                                if v is not None:
+                                    ix_asn_ipv6_address.append(v)
+                                else:
+                                    ix_asn_ipv6_address.append("N/A")
+                            elif k == "speed":
+                                if v is not None:
+                                    ix_asn_speed.append(v)
+                                else:
+                                    ix_asn_speed.append("N/A")
+                break
+        
+        self.ix_id_number = ix_id_number
+        self.ix_asn_member = ix_asn_member
+        self.ix_asn_description = ix_asn_description
+        self.ix_asn_location = ix_asn_location
+        self.ix_asn_ipv4_address = ix_asn_ipv4_address
+        self.ix_asn_ipv6_address = ix_asn_ipv6_address
+        self.ix_asn_speed = ix_asn_speed
 
     def get_api_search(self, content):
         pass
@@ -742,13 +814,14 @@ if __name__ == "__main__":
     # print(t1.ipv6_downstream_peers_info)
     # print(t1.ipv4_downstream_peers_info)
 
-    t1.get_ip_address("2a05:dfc7:60::")
-    print(t1.ip_prefix, t1.ip_asn, t1.ip_name, t1.ip_country, t1.ip_address_whois_info)
+    t1.get_internet_exchange(453)
+    print(t1.ix_id_number, t1.ix_name, t1.ix_city, t1.ix_country)
 
-    # for i in range(20000):
-    #     t1.get_asn_ixs(i)
-    #     print(f"AS Number: {i}")
-    #     print()
+    for i in range(20000):
+        t1.get_internet_exchange(i)
+        print(f"AS Number: {i}")
+        print(t1.ix_id_number, t1.ix_name, t1.ix_city, t1.ix_country)
+        print()
 
 
     # print()
