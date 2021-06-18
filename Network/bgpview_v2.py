@@ -61,6 +61,8 @@ class RequestBGPendpoint:
         # internet_exchanges_url = "https://api.bgpview.io/ix/ix_id",
         # search_url = "https://api.bgpview.io/search?query_term=digitalocean",
 
+        self.meta_data = None
+
         if "as_number" in self.api_endpoint:
             bgpview_url = self.api_endpoint.replace("as_number", str(self.asn_ip_var))
         elif "ip_address/cidr" in self.api_endpoint:
@@ -81,19 +83,29 @@ class RequestBGPendpoint:
                 print(bgpview_url)
                 print(web_request)
 
-                if web_request.status_code == 200:
-                    meta = web_request.json()
+                if web_request.status_code == 500:
+                    meta_data = web_request.json()
+                    self.meta_data = meta_data
                     break
 
             except Exception as e:
-                # traceback.print_exc()
-                print(e.message, e.args)
+                print(f"===> ERROR: {e.args}\n")
+                # print(e.message)
+                traceback.print_exc()
+
             query_try += 1
+            print("Sleep 3 seconds")
             time.sleep(3)
+        else:
+            print(f"===> ERROR: Try to query {bgpview_url} 3 times but failed.\n")
+
+        return self.meta_data
+
 
 
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     b = 126
     t1 = RequestBGPendpoint(a, b)
-    t1.run_bgpview_api()
+    # t1.run_bgpview_api()
+    print(t1.run_bgpview_api())
