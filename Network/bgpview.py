@@ -657,7 +657,7 @@ class BGPView:
         query_try = 0
         while query_try != 3:
             query_try += 1
-            time.sleep(3)
+            # time.sleep(3)
 
             if web_request.status_code == 200:
                 meta = web_request.json()
@@ -712,6 +712,10 @@ class BGPView:
         ix_api = self.ix_api.replace("ix_id", str(ix_id_number))
         web_request = requests.get(f"{ix_api}", verify=False)
 
+        self.ix_name = None
+        self.ix_city = None
+        self.ix_country = None
+
         ix_asn_member = []
         ix_asn_description = []
         ix_asn_location = []
@@ -722,7 +726,7 @@ class BGPView:
         query_try = 0
         while query_try != 3:
             query_try += 1
-            time.sleep(3)
+            time.sleep(1)
 
             if web_request.status_code == 200:
                 meta = web_request.json()
@@ -737,6 +741,7 @@ class BGPView:
                     members = data["members"]
 
                     self.ix_name = data["name_full"]
+                    # self.ix_name =
                     self.ix_city = data["city"]
                     self.ix_country = data["country_code"]
 
@@ -806,9 +811,7 @@ if __name__ == "__main__":
     import datetime
     d1 = datetime.datetime.now()
     t2 = BGPView()
-    t2.get_internet_exchange(1)
-    print(t2.ix_name)
-    for i in range(20000):
+    for i in range(3):
         d2 = datetime.datetime.now()
         t2.get_internet_exchange(i)
         print(f"Count #{i}:")
