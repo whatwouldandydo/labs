@@ -60,22 +60,6 @@ class RequestBGPendpoint:
         # ip_address_url = "https://api.bgpview.io/ip/ip_address",
         # internet_exchanges_url = "https://api.bgpview.io/ix/ix_id",
         # search_url = "https://api.bgpview.io/search?query_term=digitalocean",
-        url_list = [
-                    "https://api.bgpview.io/asn/as_number",
-                    "https://api.bgpview.io/asn/as_number/prefixes",
-                    "https://api.bgpview.io/asn/as_number/peers",
-                    "https://api.bgpview.io/asn/as_number/upstreams",
-                    "https://api.bgpview.io/asn/as_number/downstreams",
-                    "https://api.bgpview.io/asn/as_number/ixs",
-                    "https://api.bgpview.io/prefix/ip_address/cidr",
-                    "https://api.bgpview.io/ip/ip_address",
-                    "https://api.bgpview.io/ix/ix_id",
-                    "https://api.bgpview.io/search?query_term=digitalocean",
-                    ]
-
-        for url in url_list:
-            if "as_number" in url:
-                api_url = self.api_endpoint.replace("as_number", str(asn_ip_var))
 
         if "as_number" in self.api_endpoint:
             bgpview_url = self.api_endpoint.replace("as_number", str(self.asn_ip_var))
@@ -91,19 +75,25 @@ class RequestBGPendpoint:
         """ When API request fails, retry it 3 times with 3 seconds wait """
         query_try = 0
         while query_try != 3:
+            print(query_try)
             try:
                 web_request = requests.get(f"{bgpview_url}", verify=False)
+                print(bgpview_url)
+                print(web_request)
 
                 if web_request.status_code == 200:
                     meta = web_request.json()
+                    break
 
             except Exception as e:
-                traceback.print_exc()
+                # traceback.print_exc()
                 print(e.message, e.args)
-                query_try += 1
-                time.sleep(3)
+            query_try += 1
+            time.sleep(3)
 
 
 if __name__ == "__main__":
-    t1 = RequestBGPendpoint()
-    # t1.run_bgpview_api()
+    a = "https://api.bgpview.io/asn/as_number"
+    b = 126
+    t1 = RequestBGPendpoint(a, b)
+    t1.run_bgpview_api()
