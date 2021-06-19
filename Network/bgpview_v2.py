@@ -17,7 +17,7 @@ from urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 
-class RequestBGPendpoint:
+class RequestBGPapi:
     """ Replace as_number with number.
     Main URL = "https://api.bgpview.io/"
     ASN = "https://api.bgpview.io/asn/as_number"
@@ -107,7 +107,7 @@ class RequestBGPendpoint:
         return self.data_from_api
 
 
-class RequestASN(RequestBGPendpoint):
+class RequestASN(RequestBGPapi):
     """ Get ASN information such as owner, country, and more..."""
     def __init__(self, api_endpoint, asn_ip_var):
         self.asn = None
@@ -203,6 +203,8 @@ class RequestASN(RequestBGPendpoint):
 
         return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
+class RequestASNprefixes(RequestBGPapi):
+    pass
 
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
