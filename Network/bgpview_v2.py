@@ -62,6 +62,8 @@ class RequestBGPapi:
         # search_url = "https://api.bgpview.io/search?query_term=digitalocean",
 
         self.data_from_api = None
+        # self.api_status = None
+        # self.api_status_message = None
 
         if "as_number" in self.api_endpoint:
             bgpview_url = self.api_endpoint.replace("as_number", str(self.asn_ip_var))
@@ -89,12 +91,17 @@ class RequestBGPapi:
                 if web_request.status_code == 200:
                     meta_data = web_request.json()
                     self.data_from_api = meta_data
+                    # "ok" or "error""
+                    self.api_status = meta_data["status"]
+                    # "Query was successful" means good and has data
+                    self.api_status_message = meta_data["status_message"]
                     break
 
             except Exception as e:
-                print(f"===> ERROR: {e.args}\n")
+                print(f"===> ERROR: {e.args} <===")
                 # print(e.message)
                 traceback.print_exc()
+                print()
 
             query_try += 1
             print("Sleep 3 seconds")
@@ -104,12 +111,18 @@ class RequestBGPapi:
             print(f"===> ERROR: Query request to {bgpview_url} three times but failed. <===")
             print(f"===> ERROR: {bgpview_url} status code {web_request} <===\n")
 
-        return self.data_from_api
+        """ Return as tupble(dict, str, str)
+        dict = self.data_from_api
+        str = self.api_status
+        str = self.api_status_message """
+        return self.data_from_api, self.api_status, self.api_status_message
+        # return self.api_status, self.api_status_message
 
 
 class RequestASN(RequestBGPapi):
     """ Get ASN information such as owner, country, and more..."""
     def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/asn/as_number"
         self.asn = None
         self.asn_name = None
         self.asn_location = None
@@ -118,26 +131,31 @@ class RequestASN(RequestBGPapi):
         super().__init__(api_endpoint, asn_ip_var)
 
     def get_asn_info(self):
-        meta_data = self.run_bgpview_api()
+        raw_data = self.run_bgpview_api()
         # print(type(data), f">>>>>> {data}")
         # pprint(data)
         # status = self.run_bgpview_api()["status"]
         # print(status)
         # status_message = self.run_bgpview_api()["status_message"]
         # print(status_message)
+        meta_data = raw_data[0]
+        # print(meta_data)
+        status = raw_data[1]
+        status_message = raw_data[2]
         try:
             # "ok" or "error""
-            status = meta_data["status"]
+            # status = meta_data["status"]
             # print(status)
 
             # "Malformed input" or ""Query was successful""
-            status_message = meta_data["status_message"]
+            # status_message = meta_data["status_message"]
             # print(status_message)
 
             if status == "error" or "Malformed input" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             elif status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
+                # print(data)
                 asn = data["asn"]
                 asn_name = data["description_short"]
                 asn_location = data["country_code"]
@@ -194,28 +212,82 @@ class RequestASN(RequestBGPapi):
                     self.asn_location = "NEED VALIDATION FROM HUMAN"
                     self.asn_date_allocated = "NEED VALIDATION FROM HUMAN"
                     self.asn_date_updated = "NEED VALIDATION FROM HUMAN"
+            else:
+                print(f"===> REVIEW: {self.api_endpoint} has no data. <===\n")
 
             # return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
         except Exception as e:
-            print(f"===> ERROR: {e.args}\n")
+            print(f"===> ERROR: {e.args} <===")
             traceback.print_exc()
+            print()
 
+        # Sample return ('1', 'Level 3 Parent, LLC', 'US', '2001-09-20 00:00:00', '2021-05-15 07:42:08')
         return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
 class RequestASNprefixes(RequestBGPapi):
-    pass
+    """ Get prefixes IPv4 and IPv6 from the AS number """
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/asn/as_number/prefixes"
+        self.ipv4_prefixes = None
+        self.ipv4_parent_prefixes = None
+        self.ipv6_prefixes = None
+        self.ipv6_parent_prefixes = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_asn_prefixes(self):
+        raw_data = self.run_bgpview_api()
+        # print(type(raw_data))
+        # print(raw_data[1])
+        meta_data = raw_data[0]
+        # print(type(meta_data))
+        # print(meta_data)
+        status = raw_data[1]
+        # print(type(status))
+        # print(status)
+        status_message = raw_data[2]
+        # print(type(status_message))
+        # print(status_message)
+
+        try:
+            # "ok" or "error"
+            # status = meta_data["status"]
+            # "Query was successful" or "Malformed input"
+            # status_message = data["status_message"]
+
+            # if status == "error" or "Malformed input" in status_message:
+            # if "error" in meta_data["status"] or "Malformed" in data["status_message"]:
+            # if "error" in status or "Malformed" in status_message:
+            #     print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                ipv4_prefixes_list = data["ipv4_prefixes"]
+                ipv6_prefixes_list = data["ipv6_prefixes"]
+                # print(ipv4_prefixes_list)
+                print(ipv6_prefixes_list)
+            else:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
+        
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+
+
+
 
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
-    b = "67000"
-    t1 = RequestASN(a, b)
+    # a = "https://api.bgpview.io/asn/as_number/prefixes"
+    b = "1"
+    t1 = RequestASNprefixes(a, b)
     # t1.get_asn_info()
-    print(t1.get_asn_info())
+    print(t1.get_asn_prefixes())
+    print(t1.api_endpoint)
 
     import datetime
     d1 = datetime.datetime.now()
     t2 = RequestASN(a, b)
+    print(t2.api_endpoint)
     # print(t2.get_asn_info())
 
     for i in range(65555):
@@ -228,3 +300,5 @@ if __name__ == "__main__":
         print(d2 - d1)
         print(d3 - d2)
         print()
+
+    
