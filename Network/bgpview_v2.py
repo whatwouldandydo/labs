@@ -648,32 +648,129 @@ class RequestASNdownstreams(RequestBGPapi):
         # Return sample <ASN: 29447 -- Name: Iliad Italia S.p.A -- Location: FR>
         return self.ipv4_downstreams_asn, self.ipv6_downstreams_asn
 
+
+class RequestASNixs(RequestBGPapi):
+    """ Get Internet Exchange name, remote peers information
+    such as AS number, name, IPv4/IPv6 peering addresses,
+    city, country, and speed
+    """
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/asn/as_number/ixs"
+        self.internet_exchanges = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_asn_ixs(self):
+        raw_data = self.run_bgpview_api()
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+
+        try:
+            ixs_list = []
+
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                # print(type(data))
+                # print(data)
+
+                for line in data:
+                    # print(line)
+                    # print(type(line))
+                    for k, v in line.items():
+                        if k == "ix_id":
+                            ix = f"IX ID: {v}"
+                            # print(ix)
+                        elif k == "name":
+                            name = v
+                        elif k == "name_full":
+                            if name is not None:
+                                name_full = f"Name: {v} ({name})"
+                            else:
+                                name_full = f"Name: {v}"
+                            # print(name_full)
+                        elif k == "country_code":
+                            country = v
+                        elif k == "city":
+                            if country is not None:
+                                location = f"Location: {v}, {country}"
+                            elif v is not None:
+                                location = f"Location: {v}"
+                            else:
+                                location = f"Location: None"
+                            # print(location)
+                        elif k == "ipv4_address":
+                            if v is not None:
+                                ipv4 = f"IPv4 Address: {v}"
+                            else:
+                                ipv4 = f"IPv4 Address: None"
+                            # print(ipv4)
+                        elif k == "ipv6_address":
+                            if v is not None:
+                                ipv6 = f"IPv6 Address: {v}"
+                            else:
+                                ipv6 = f"IPv6 Address: None"
+                            # print(ipv6)
+                        elif k == "speed":
+                            if v == 0 or v == "0" or v is None:
+                                speed = f"Speed: None"
+                            else:
+                                speed = f"Speed: {v}"
+                            # print(speed)
+                            ixs_info = f"<{ix} -- {name_full} -- {location} --{ipv4} -- {ipv6} -- {speed}>"
+                            # print(ixs_info)
+                            ixs_list.append(ixs_info)
+                        # elif 
+                        # elif k == "country_code":
+                        #     location = f"Location: {city}, {v}"
+                        #     print(location)
+                    # input()
+            elif status == "error" or "Malformed" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid Internet Exchange number. <===\n")
+            else:
+                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+
+            if len(ixs_list) == 0:
+                self.internet_exchanges = f"Internet Exchange ID {self.asn_ip_var} has NO data."
+            else:
+                ixs_list.insert(0, f"Internet Exchange ID {self.asn_ip_var} Information .....")
+                self.internet_exchanges = ixs_list
+
+
+
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+
+        return self.internet_exchanges
+
+
+
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "1"
-    t1 = RequestASNdownstreams(a, b)
+    b = "18119"
+    t1 = RequestASNixs(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_asn_downstreams())
+    pprint(t1.get_asn_ixs())
     print(t1.api_endpoint)
     print(t1.web_url)
 
-    # import datetime
-    # d1 = datetime.datetime.now()
-    # t2 = RequestASN(a, b)
-    # print(t2.api_endpoint)
-    # # print(t2.get_asn_info())
+    import datetime
+    d1 = datetime.datetime.now()
+    t2 = RequestASN(a, b)
+    print(t2.api_endpoint)
+    # print(t2.get_asn_info())
 
-    # for i in range(65555):
-    # # for i in range(64000, 65555):
-    #     d2 = datetime.datetime.now()
-    #     t2 = RequestASNdownstreams(a, i)
-    #     print(f"Count #{i}:")
-    #     print(t2.get_asn_downstreams())
-    #     d3 = datetime.datetime.now()
-    #     print(d2 - d1)
-    #     print(d3 - d2)
-    #     print()
+    for i in range(65555):
+    # for i in range(64000, 65555):
+        d2 = datetime.datetime.now()
+        t2 = RequestASNixs(a, i)
+        print(f"Count #{i}:")
+        print(t2.get_asn_ixs())
+        d3 = datetime.datetime.now()
+        print(d2 - d1)
+        print(d3 - d2)
+        print()
 
     
