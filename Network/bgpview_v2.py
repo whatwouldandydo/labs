@@ -212,8 +212,10 @@ class RequestASN(RequestBGPapi):
                     self.asn_location = "NEED VALIDATION FROM HUMAN"
                     self.asn_date_allocated = "NEED VALIDATION FROM HUMAN"
                     self.asn_date_updated = "NEED VALIDATION FROM HUMAN"
+
+                # print(f"TESTINGGGGG {self.web_url}")
             else:
-                print(f"===> REVIEW: {self.api_endpoint} has no data. <===\n")
+                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
 
             # return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
@@ -229,6 +231,7 @@ class RequestASNprefixes(RequestBGPapi):
     """ Get prefixes IPv4 and IPv6 from the AS number """
     def __init__(self, api_endpoint, asn_ip_var):
         api_endpoint = "https://api.bgpview.io/asn/as_number/prefixes"
+        # self.api_endpoint = api_endpoint
         self.ipv4_prefixes = None
         self.ipv4_parent_prefixes = None
         self.ipv6_prefixes = None
@@ -254,8 +257,12 @@ class RequestASNprefixes(RequestBGPapi):
             # status = meta_data["status"]
             # "Query was successful" or "Malformed input"
             # status_message = data["status_message"]
+            ipv4_prefixes = []
+            ipv4_parent_prefixes = []
+            ipv6_prefixes = []
+            ipv6_parent_prefixes = []
 
-            # if status == "error" or "Malformed input" in status_message:
+            # if status == "error" or "Malformed" in status_message:
             # if "error" in meta_data["status"] or "Malformed" in data["status_message"]:
             # if "error" in status or "Malformed" in status_message:
             #     print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
@@ -264,13 +271,68 @@ class RequestASNprefixes(RequestBGPapi):
                 ipv4_prefixes_list = data["ipv4_prefixes"]
                 ipv6_prefixes_list = data["ipv6_prefixes"]
                 # print(ipv4_prefixes_list)
-                print(ipv6_prefixes_list)
-            else:
+                # print(ipv6_prefixes_list)
+
+                for line in ipv4_prefixes_list:
+                    for k, v in line.items():
+                        # print(k)
+                        if type(v) == dict:
+                            if v["prefix"] is not None:
+                                parent = v["prefix"]
+                                ipv4_parent_prefixes.append(parent)
+                        elif k == "prefix":
+                            ip = v
+                        elif k == "description":
+                            name = v
+                        elif k == "country_code":
+                            location = v
+
+                            ipv4_info = f"{ip} {name} ({location})"
+                            # print(ipv4_info)
+                            ipv4_prefixes.append(ipv4_info)
+
+                for line in ipv6_prefixes_list:
+                    for k, v in line.items():
+                        if type(v) == dict:
+                            if v["prefix"] is not None:
+                                parent = v["prefix"]
+                                ipv6_parent_prefixes.append(parent)
+                        elif k == "prefix":
+                            ip = v
+                        elif k == "description":
+                            name = v
+                        elif k == "country_code":
+                            location = v
+
+                            ipv6_info = f"{ip} {name} ({location})"
+                            # print(ipv4_info)
+                            ipv6_prefixes.append(ipv6_info)
+
+                # a = self.web_url
+                # print(a)
+
+                # print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+                # print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
+
+            elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
-        
+            else:
+                print(f"===> REVIEW: {self.api_endpoint} has no data. <===\n")
+
+            self.ipv4_prefixes = ipv4_prefixes
+            self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
+            self.ipv6_prefixes = ipv6_prefixes
+            self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
+            # pprint(self.ipv4_prefixes)
+            # pprint(self.ipv4_parent_prefixes)
+            # pprint(self.ipv6_prefixes)
+            # pprint(self.ipv6_parent_prefixes)
+
         except Exception as e:
             print(f"===> ERROR: {e.args} <===")
             traceback.print_exc()
+
+        return self.ipv4_parent_prefixes, self.ipv4_prefixes, self.ipv6_parent_prefixes, self.ipv6_prefixes
 
 
 
@@ -278,27 +340,28 @@ class RequestASNprefixes(RequestBGPapi):
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
-    b = "1"
+    b = "61138"
     t1 = RequestASNprefixes(a, b)
     # t1.get_asn_info()
     print(t1.get_asn_prefixes())
     print(t1.api_endpoint)
+    print(t1.web_url)
 
-    import datetime
-    d1 = datetime.datetime.now()
-    t2 = RequestASN(a, b)
-    print(t2.api_endpoint)
-    # print(t2.get_asn_info())
+    # import datetime
+    # d1 = datetime.datetime.now()
+    # t2 = RequestASN(a, b)
+    # print(t2.api_endpoint)
+    # # print(t2.get_asn_info())
 
-    for i in range(65555):
-    # for i in range(64000, 65555):
-        d2 = datetime.datetime.now()
-        t2 = RequestASN(a, i)
-        print(f"Count #{i}:")
-        print(t2.get_asn_info())
-        d3 = datetime.datetime.now()
-        print(d2 - d1)
-        print(d3 - d2)
-        print()
+    # for i in range(65555):
+    # # for i in range(64000, 65555):
+    #     d2 = datetime.datetime.now()
+    #     t2 = RequestASN(a, i)
+    #     print(f"Count #{i}:")
+    #     print(t2.get_asn_info())
+    #     d3 = datetime.datetime.now()
+    #     print(d2 - d1)
+    #     print(d3 - d2)
+    #     print()
 
     
