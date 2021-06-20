@@ -179,11 +179,11 @@ class RequestASN(RequestBGPapi):
                 if iana_assignment_status == "assigned":
                     if "unknown" not in rir_allocation_status:
                         # if rir_allocation_status == "assigned":
-                        self.asn = str(asn)
-                        self.asn_name = asn_name
-                        self.asn_location = asn_location
-                        self.asn_date_allocated = asn_date_allocated
-                        self.asn_date_updated = asn_date_updated
+                        self.asn = f"ASN: {asn}"
+                        self.asn_name = f"Name: {asn_name}"
+                        self.asn_location = f"Location: {asn_location}"
+                        self.asn_date_allocated = f"Created Date: {asn_date_allocated}"
+                        self.asn_date_updated = f"Last Update: {asn_date_updated}"
                     # elif rir_allocation_status == "allocated":
                 # elif rir_allocation_status == "available":
                 # # if rir_allocation_status == "available":
@@ -194,20 +194,20 @@ class RequestASN(RequestBGPapi):
                 #     self.asn_date_updated = asn_date_updated
                 # elif rir_allocation_status == "reserved" and iana_assignment_status == "reserved":
                 elif "reserved" in iana_assignment_status and rir_allocation_status:
-                    self.asn = str(asn)
+                    self.asn = f"ASN: {asn}"
                     self.asn_name = "Private AS Number (RFC6996)"
                     self.asn_location = "Use within the Organization Network"
                     self.asn_date_allocated = "N/A"
                     self.asn_date_updated = "N/A"
                 # elif rir_allocation_status == "unknown" and iana_assignment_status == "unknown":
                 elif "unknown" in iana_assignment_status and rir_allocation_status:
-                    self.asn = str(asn)
+                    self.asn = f"ASN: {asn}"
                     self.asn_name = "Not a valid AS Number"
                     self.asn_location = "N/A"
                     self.asn_date_allocated = "N/A"
                     self.asn_date_updated = "N/A"
                 else:
-                    self.asn = asn
+                    self.asn = f"ASN: {asn}"
                     self.asn_name = "NEED VALIDATION FROM HUMAN"
                     self.asn_location = "NEED VALIDATION FROM HUMAN"
                     self.asn_date_allocated = "NEED VALIDATION FROM HUMAN"
@@ -224,7 +224,12 @@ class RequestASN(RequestBGPapi):
             traceback.print_exc()
             print()
 
-        # Sample return ('1', 'Level 3 Parent, LLC', 'US', '2001-09-20 00:00:00', '2021-05-15 07:42:08')
+        """ Return sample
+            ('ASN: 1',
+            'Name: Level 3 Parent, LLC',
+            'Location: US',
+            'Created Date: 2001-09-20 00:00:00',
+            'Last Update: 2021-05-15 07:42:08') """
         return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
 class RequestASNprefixes(RequestBGPapi):
@@ -412,6 +417,8 @@ class RequestASNPeers(RequestBGPapi):
 
 
         try:
+            # ipv4_peers = f"AS Number {self.asn_ip_var} IPv4 Peering Partners"
+            # ipv4_peers = list(ipv4_peers)
             ipv4_peers = []
             ipv6_peers = []
 
@@ -428,24 +435,24 @@ class RequestASNPeers(RequestBGPapi):
                         # print(k)
                         # input()
                         if k == "asn":
-                            asn = v
+                            asn = f"ASN: {v}"
                         elif k == "description":
-                            name = v
+                            name = f"Name: {v}"
                         elif k == "country_code":
-                            location = v
-                            ipv4_asn_info = f"{asn} {name} ({location})"
+                            location = f"Location: {v}"
+                            ipv4_asn_info = f"<{asn} -- {name} -- {location}>"
                             # print(ipv4_asn_info)
                             ipv4_peers.append(ipv4_asn_info)
 
                 for line in ipv6_peers_list:
                     for k, v in line.items():
                         if k == "asn":
-                            asn = v
+                            asn = f"ASN: {v}"
                         elif k == "description":
-                            name = v
+                            name = f"Name: {v}"
                         elif k == "country_code":
-                            location = v
-                            ipv6_asn_info = f"{asn} {name} ({location})"
+                            location = f"Location: {v}"
+                            ipv6_asn_info = f"<{asn} -- {name} -- {location}>"
                             # print(ipv4_asn_info)
                             ipv6_peers.append(ipv6_asn_info)
 
@@ -461,11 +468,13 @@ class RequestASNPeers(RequestBGPapi):
             if len(ipv4_peers) == 0:
                 self.ipv4_asn_peers = "No IPv4 Peers"
             else:
+                ipv4_peers.insert(0, f"AS Number {self.asn_ip_var} IPv4 Peering Partners .....")
                 self.ipv4_asn_peers = ipv4_peers
             
             if len(ipv6_peers) == 0:
                 self.ipv6_asn_peers = "No IPv6 Peers"
             else:
+                ipv6_peers.insert(0, f"AS Number {self.asn_ip_var} IPv6 Peering Partners .....")
                 self.ipv6_asn_peers = ipv6_peers
 
             # pprint(self.ipv4_asn_peers)
@@ -475,6 +484,7 @@ class RequestASNPeers(RequestBGPapi):
             print(f"===> ERROR: {e.args} <===")
             traceback.print_exc()
 
+        # Return sample <ASN: 394487 -- Name: Data Truck -- Location: US>
         return self.ipv4_asn_peers, self.ipv6_asn_peers
 
 
@@ -545,11 +555,13 @@ class RequestANSupstreams(RequestBGPapi):
             if len(ipv4_upstreams) == 0:
                 self.ipv4_upstreams_asn = "No IPv4 Upstreams ASN"
             else:
+                ipv4_upstreams.insert(0, f"AS Number {self.asn_ip_var} IPv4 Upstreams ASN .....")
                 self.ipv4_upstreams_asn = ipv4_upstreams
 
             if len(ipv6_upstreams) == 0:
                 self.ipv6_upstreams_asn = "No IPv6 Upstreams ASN"
             else:
+                ipv6_upstreams.insert(0, f"AS Number {self.asn_ip_var} IPv6 Upstreams ASN .....")
                 self.ipv6_upstreams_asn = ipv6_upstreams
 
         except Exception as e:
@@ -568,9 +580,9 @@ if __name__ == "__main__":
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
     b = "1"
-    t1 = RequestANSupstreams(a, b)
+    t1 = RequestASNprefixes(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_asn_upstreams())
+    pprint(t1.get_asn_prefixes())
     print(t1.api_endpoint)
     print(t1.web_url)
 
