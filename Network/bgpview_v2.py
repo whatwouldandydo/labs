@@ -478,6 +478,89 @@ class RequestASNPeers(RequestBGPapi):
         return self.ipv4_asn_peers, self.ipv6_asn_peers
 
 
+class RequestANSupstreams(RequestBGPapi):
+    """ Get Upstream BGP AS number, names, and countries """
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/asn/as_number/upstreams"
+        self.ipv4_upstreams_asn = None
+        self.ipv6_upstreams_asn = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_asn_upstreams(self):
+        raw_data = self.run_bgpview_api()
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+
+        try:
+            ipv4_upstreams = []
+            ipv6_upstreams = []
+
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                ipv4_upstreams_list = data["ipv4_upstreams"]
+                ipv6_upstreams_list = data["ipv6_upstreams"]
+                # print(type(ipv4_upstreams_list))
+                # print(ipv4_upstreams_list)
+
+                for line in ipv4_upstreams_list:
+                    for k, v in line.items():
+                        if k == "asn":
+                            # asn = dict()
+                            # asn["asn"] = v
+                            asn = f"ASN: {v}"
+                            # print(asn) 
+                        elif k == "description":
+                            # name = dict()
+                            # name["name"] = v
+                            # print(name)
+                            name = f"Name: {v}"
+                        elif k == "country_code":
+                            # location = dict()
+                            # location["location"] = v
+                            # print(location)
+                            location = f"Location: {v}"
+                            ipv4_up_info = f"<{asn} -- {name} -- {location}>"
+                            # print(ipv4_up_info)
+                            ipv4_upstreams.append(ipv4_up_info)
+
+                for line in ipv6_upstreams_list:
+                    for k, v in line.items():
+                        if k == "asn":
+                            asn = f"ASN: {v}"
+                        elif k == "description":
+                            name = f"Name: {v}"
+                        elif k == "country_code":
+                            location = f"Location: {v}"
+                            ipv6_up_info = f"<{asn} -- {name} -- {location}>"
+                            ipv6_upstreams.append(ipv6_up_info)
+
+            elif status == "error" or "Malformed" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
+            else:
+                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+
+            # print(ipv4_upstreams)
+            # print(ipv6_upstreams)
+            if len(ipv4_upstreams) == 0:
+                self.ipv4_upstreams_asn = "No IPv4 Upstreams ASN"
+            else:
+                self.ipv4_upstreams_asn = ipv4_upstreams
+
+            if len(ipv6_upstreams) == 0:
+                self.ipv6_upstreams_asn = "No IPv6 Upstreams ASN"
+            else:
+                self.ipv6_upstreams_asn = ipv6_upstreams
+
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+
+    
+        # Return output <ASN: 394487 -- Name: Data Truck -- Location: US>
+        return self.ipv4_upstreams_asn, self.ipv6_upstreams_asn
+
+
 
 
 if __name__ == "__main__":
@@ -485,9 +568,9 @@ if __name__ == "__main__":
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
     b = "1"
-    t1 = RequestASNPeers(a, b)
+    t1 = RequestANSupstreams(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_asn_peers())
+    pprint(t1.get_asn_upstreams())
     print(t1.api_endpoint)
     print(t1.web_url)
 
