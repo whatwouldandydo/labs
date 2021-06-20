@@ -330,7 +330,7 @@ class RequestASNprefixes(RequestBGPapi):
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
-                print(f"===> REVIEW: {self.api_endpoint} has no data. <===\n")
+                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
 
             # Return None when there is no IPv4 or IPv6 prefixes
             # self.ipv4_prefixes = ipv4_prefixes
@@ -393,14 +393,101 @@ class RequestASNprefixes(RequestBGPapi):
         return self.ipv4_parent_prefixes, self.ipv4_prefixes, self.ipv6_parent_prefixes, self.ipv6_prefixes
 
 
+class RequestASNPeers(RequestBGPapi):
+    """ Get ASN IPv4 and IPv6 peering partners """
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/asn/as_number/peers"
+        self.ipv4_asn_peers = None
+        self.ipv6_asn_peers = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_asn_peers(self):
+        raw_data = self.run_bgpview_api()
+        # print(raw_data)
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+        # print(status)
+        # print(status_message)
+
+
+        try:
+            ipv4_peers = []
+            ipv6_peers = []
+
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                # print(data)
+                ipv4_peers_list = data["ipv4_peers"]
+                ipv6_peers_list = data["ipv6_peers"]
+
+                # print(ipv4_peers)
+
+                for line in ipv4_peers_list:
+                    for k, v in line.items():
+                        # print(k)
+                        # input()
+                        if k == "asn":
+                            asn = v
+                        elif k == "description":
+                            name = v
+                        elif k == "country_code":
+                            location = v
+                            ipv4_asn_info = f"{asn} {name} ({location})"
+                            # print(ipv4_asn_info)
+                            ipv4_peers.append(ipv4_asn_info)
+
+                for line in ipv6_peers_list:
+                    for k, v in line.items():
+                        if k == "asn":
+                            asn = v
+                        elif k == "description":
+                            name = v
+                        elif k == "country_code":
+                            location = v
+                            ipv6_asn_info = f"{asn} {name} ({location})"
+                            # print(ipv4_asn_info)
+                            ipv6_peers.append(ipv6_asn_info)
+
+                # print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
+                # print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+
+            elif status == "error" or "Malformed" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
+            else:
+                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+
+            # Return None when there is no IPv4 or IPv6 Peers
+            if len(ipv4_peers) == 0:
+                self.ipv4_asn_peers = "No IPv4 Peers"
+            else:
+                self.ipv4_asn_peers = ipv4_peers
+            
+            if len(ipv6_peers) == 0:
+                self.ipv6_asn_peers = "No IPv6 Peers"
+            else:
+                self.ipv6_asn_peers = ipv6_peers
+
+            # pprint(self.ipv4_asn_peers)
+            # pprint(self.ipv6_asn_peers)
+
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+
+        return self.ipv4_asn_peers, self.ipv6_asn_peers
+
+
+
 
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
+    # a = "https://api.bgpview.io/asn/as_number/peers"
     b = "1"
-    t1 = RequestASNprefixes(a, b)
+    t1 = RequestASNPeers(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_asn_prefixes())
+    pprint(t1.get_asn_peers())
     print(t1.api_endpoint)
     print(t1.web_url)
 
