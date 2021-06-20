@@ -557,15 +557,15 @@ class RequestANSupstreams(RequestBGPapi):
             # print(ipv4_upstreams)
             # print(ipv6_upstreams)
             if len(ipv4_upstreams) == 0:
-                self.ipv4_upstreams_asn = "No IPv4 Upstreams ASN"
+                self.ipv4_upstreams_asn = f"AS Number {self.asn_ip_var} NO IPv4 Upstreams"
             else:
-                ipv4_upstreams.insert(0, f"AS Number {self.asn_ip_var} IPv4 Upstreams ASN .....")
+                ipv4_upstreams.insert(0, f"AS Number {self.asn_ip_var} IPv4 Upstreams .....")
                 self.ipv4_upstreams_asn = ipv4_upstreams
 
             if len(ipv6_upstreams) == 0:
-                self.ipv6_upstreams_asn = "No IPv6 Upstreams ASN"
+                self.ipv6_upstreams_asn = f"AS Number {self.asn_ip_var} NO IPv6 Upstreams"
             else:
-                ipv6_upstreams.insert(0, f"AS Number {self.asn_ip_var} IPv6 Upstreams ASN .....")
+                ipv6_upstreams.insert(0, f"AS Number {self.asn_ip_var} IPv6 Upstreams .....")
                 self.ipv6_upstreams_asn = ipv6_upstreams
 
         except Exception as e:
@@ -577,16 +577,85 @@ class RequestANSupstreams(RequestBGPapi):
         return self.ipv4_upstreams_asn, self.ipv6_upstreams_asn
 
 
+class RequestASNdownstreams(RequestBGPapi):
+    """ Get Downstreams BGP AS number, names, and countries """
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/asn/as_number/downstreams"
+        self.ipv4_downstreams_asn = None
+        self.ipv6_downstreams_asn = None
+        super().__init__(api_endpoint, asn_ip_var)
 
+    def get_asn_downstreams(self):
+        raw_data = self.run_bgpview_api()
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+
+        try:
+            ipv4_downstreams = []
+            ipv6_downstreams = []
+
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                ipv4_downstreams_list = data["ipv4_downstreams"]
+                ipv6_downstreams_list = data["ipv6_downstreams"]
+
+                for line in ipv4_downstreams_list:
+                    for k, v in line.items():
+                        if k == "asn":
+                            asn = f"ASN: {v}"
+                        elif k == "description":
+                            name = f"Name: {v}"
+                        elif k == "country_code":
+                            location = f"Location: {v}"
+                            ipv4_down_info = f"<{asn} -- {name} -- {location}>"
+                            # print(ipv4_down_info)
+                            ipv4_downstreams.append(ipv4_down_info)
+                
+                for line in ipv6_downstreams_list:
+                    for k, v in line.items():
+                        if k == "asn":
+                            asn = f"ASN: {v}"
+                        elif k == "description":
+                            name = f"Name: {v}"
+                        elif k == "country_code":
+                            location = f"Location: {v}"
+                            ipv6_down_info = f"<{asn} -- {name} -- {location}>"
+                            # print(ipv6_down_info)
+                            ipv6_downstreams.append(ipv6_down_info)
+
+            elif status == "error" or "Malformed" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
+            else:
+                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+
+            if len(ipv4_downstreams) == 0:
+                self.ipv4_downstreams_asn = f"AS Number {self.asn_ip_var} NO IPv4 Downstreams"
+            else:
+                ipv4_downstreams.insert(0, f"AS Number {self.asn_ip_var} IPv4 Downstreams .....")
+                self.ipv4_downstreams_asn = ipv4_downstreams
+            
+            if len(ipv6_downstreams) == 0:
+                self.ipv6_downstreams_asn = f"AS Number {self.asn_ip_var} NO IPv6 Downstreams"
+            else:
+                ipv6_downstreams.insert(0, f"AS Number {self.asn_ip_var} IPv6 Downstreams .....")
+                self.ipv6_downstreams_asn = ipv6_downstreams
+
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+
+        # Return sample <ASN: 29447 -- Name: Iliad Italia S.p.A -- Location: FR>
+        return self.ipv4_downstreams_asn, self.ipv6_downstreams_asn
 
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "123456789"
-    t1 = RequestASNprefixes(a, b)
+    b = "1"
+    t1 = RequestASNdownstreams(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_asn_prefixes())
+    pprint(t1.get_asn_downstreams())
     print(t1.api_endpoint)
     print(t1.web_url)
 
@@ -599,9 +668,9 @@ if __name__ == "__main__":
     # for i in range(65555):
     # # for i in range(64000, 65555):
     #     d2 = datetime.datetime.now()
-    #     t2 = RequestASN(a, i)
+    #     t2 = RequestASNdownstreams(a, i)
     #     print(f"Count #{i}:")
-    #     print(t2.get_asn_info())
+    #     print(t2.get_asn_downstreams())
     #     d3 = datetime.datetime.now()
     #     print(d2 - d1)
     #     print(d3 - d2)
