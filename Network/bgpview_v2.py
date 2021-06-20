@@ -656,7 +656,7 @@ class RequestASNixs(RequestBGPapi):
     """
     def __init__(self, api_endpoint, asn_ip_var):
         api_endpoint = "https://api.bgpview.io/asn/as_number/ixs"
-        self.internet_exchanges = None
+        self.asn_ixs = None
         super().__init__(api_endpoint, asn_ip_var)
 
     def get_asn_ixs(self):
@@ -730,47 +730,107 @@ class RequestASNixs(RequestBGPapi):
                 print(f"===> REVIEW: {self.web_url} has no data. <===\n")
 
             if len(ixs_list) == 0:
-                self.internet_exchanges = f"Internet Exchange ID {self.asn_ip_var} has NO data."
+                self.asn_ixs = f"Internet Exchange ID {self.asn_ip_var} has NO data."
             else:
                 ixs_list.insert(0, f"Internet Exchange ID {self.asn_ip_var} Information .....")
-                self.internet_exchanges = ixs_list
-
-
+                self.asn_ixs = ixs_list
 
         except Exception as e:
             print(f"===> ERROR: {e.args} <===")
             traceback.print_exc()
 
-        return self.internet_exchanges
+        return self.asn_ixs
 
 
+class RequestPrefix(RequestBGPapi):
+    """ Get prefix owner, ASN, address, and upstreams ASN """
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/prefix/ip_address/cidr"
+        self.prefix_detail = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_prefix(self):
+        raw_data = self.run_bgpview_api()
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+        # print(meta_data)
+        # print(type(meta_data))
+
+        try:
+            prefix_list = []
+            # print(status, status_message)
+
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                # print(data)
+
+                prefix = data["prefix"]
+                name = data["name"]
+                description_short = data["description_short"]
+                country = data["country_codes"]["whois_country_code"]
+                date_allocated = data["rir_allocation"]["date_allocated"]
+                asns = data["asns"]
+
+                for line in asns:
+                    for k, v in line.items():
+                        if k == "asn":
+                            asn = v
+                        elif k == "name":
+                            as_name = v
+                        elif k == "description":
+                            as_desc = v
+                        elif k == "country_code":
+                            as_country = v
+
+                # print(prefix, name, description_short, country, date_allocated, asns)
+                
+                prefix_info = f"<Prefix: {prefix} -- Name: {name} ({description_short}) -- Location: {country} -- Date Assigned: {date_allocated} | ASN: {asn} Name: {as_name} Location:{as_country}>"
+                # print(prefix_info)
+                prefix_list.append(prefix_info)
+
+            elif status == "error" and "Prefix not found" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} Prefix not found in BGP table or not a valid prefix. <===\n")
+            elif status == "error" and "Malformed input" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid entry. Example: 192.209.63.0/24. <===\n")
+
+            if len(prefix_list) == 0:
+                self.prefix_detail = f"No Data on prefix {self.asn_ip_var}"
+            else:
+                self.prefix_detail = prefix_list
+        
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+
+        return self.prefix_detail
 
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "18119"
-    t1 = RequestASNixs(a, b)
+    b = "168.209.63.0/24"
+    t1 = RequestPrefix(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_asn_ixs())
+    pprint(t1.get_prefix())
     print(t1.api_endpoint)
     print(t1.web_url)
 
-    import datetime
-    d1 = datetime.datetime.now()
-    t2 = RequestASN(a, b)
-    print(t2.api_endpoint)
-    # print(t2.get_asn_info())
+    # import datetime
+    # d1 = datetime.datetime.now()
+    # t2 = RequestASN(a, b)
+    # print(t2.api_endpoint)
+    # # print(t2.get_asn_info())
 
-    for i in range(65555):
-    # for i in range(64000, 65555):
-        d2 = datetime.datetime.now()
-        t2 = RequestASNixs(a, i)
-        print(f"Count #{i}:")
-        print(t2.get_asn_ixs())
-        d3 = datetime.datetime.now()
-        print(d2 - d1)
-        print(d3 - d2)
-        print()
+    # for i in range(65555):
+    # # for i in range(64000, 65555):
+    #     d2 = datetime.datetime.now()
+    #     t2 = RequestASNixs(a, i)
+    #     print(f"Count #{i}:")
+    #     print(t2.get_asn_ixs())
+    #     d3 = datetime.datetime.now()
+    #     print(d2 - d1)
+    #     print(d3 - d2)
+    #     print()
 
     
