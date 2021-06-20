@@ -232,6 +232,7 @@ class RequestASN(RequestBGPapi):
             'Last Update: 2021-05-15 07:42:08') """
         return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
+
 class RequestASNprefixes(RequestBGPapi):
     """ Get prefixes IPv4 and IPv6 from the AS number """
     def __init__(self, api_endpoint, asn_ip_var):
@@ -295,7 +296,7 @@ class RequestASNprefixes(RequestBGPapi):
                         elif k == "country_code":
                             location = v
 
-                            ipv4_info = f"{ip} {name} ({location})"
+                            ipv4_info = f"<{ip} {name} ({location}>)"
                             # print(ipv4_info)
                             ipv4_prefixes.append(ipv4_info)
                 # else:
@@ -308,7 +309,7 @@ class RequestASNprefixes(RequestBGPapi):
                         if type(v) == dict:
                             if v["prefix"] is not None:
                                 parent = v["prefix"]
-                                print(parent)
+                                # print(parent)
                                 ipv6_parent_prefixes.append(parent)
                             # else:
                             #     ipv6_parent_prefixes.append("No IPv6")
@@ -319,7 +320,7 @@ class RequestASNprefixes(RequestBGPapi):
                         elif k == "country_code":
                             location = v
 
-                            ipv6_info = f"{ip} {name} ({location})"
+                            ipv6_info = f"<{ip} {name} ({location}>)"
                             # print(ipv4_info)
                             ipv6_prefixes.append(ipv6_info)
                 # else:
@@ -349,27 +350,31 @@ class RequestASNprefixes(RequestBGPapi):
             # print(f"ipv6_prefixes ----> {ipv6_prefixes}\n")
             # print(f"ipv6_parent_prefixes -----> {ipv6_parent_prefixes}\n")
 
-            # Return None when there is no IPv4 or IPv6 prefixes
+            # Return sample (<161.49.61.0/24 Converge ICT Network (PH>)
             if len(ipv4_prefixes) == 0:
                 # ipv4_pref = None
                 # self.ipv4_prefixes = ipv4_pref
-                self.ipv4_prefixes = "No IPv4 Prefixes"
+                self.ipv4_prefixes = f"AS Number {self.asn_ip_var} has no IPv4 Prefixes"
             else:
+                ipv4_prefixes.insert(0, f"AS Number {self.asn_ip_var} IPv4 Prefixes .....")
                 self.ipv4_prefixes = ipv4_prefixes
 
             if len(ipv4_parent_prefixes) == 0:
-                self.ipv4_parent_prefixes = "No IPv4 Parent Prefixes"
+                self.ipv4_parent_prefixes = f"AS Number {self.asn_ip_var} has no IPv4 Parent Prefixes"
             else:
+                ipv4_parent_prefixes.insert(0, f"AS Number {self.asn_ip_var} IPv4 Parent Prefixes .....")
                 self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
 
             if len(ipv6_prefixes) == 0:
-                self.ipv6_prefixes = "No IPv6 Prefixes"
+                self.ipv6_prefixes = f"AS Number {self.asn_ip_var} has no IPv6 Prefixes"
             else:
+                ipv6_prefixes.insert(0, f"AS Number {self.asn_ip_var} IPv6 Prefixes .....")
                 self.ipv6_prefixes = ipv6_prefixes
 
             if len(ipv6_parent_prefixes) == 0:
-                self.ipv6_parent_prefixes = "No IPv6 Parent Prefixes"
+                self.ipv6_parent_prefixes = f"AS Number {self.asn_ip_var} has no IPv6 Parent Prefixes"
             else:
+                ipv6_parent_prefixes.insert(0, f"AS Number {self.asn_ip_var} IPv6 Parent Prefixes .....")
                 self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
 
             # if len(ipv4_prefixes) != 0:
@@ -395,7 +400,7 @@ class RequestASNprefixes(RequestBGPapi):
             print(f"===> ERROR: {e.args} <===")
             traceback.print_exc()
 
-        return self.ipv4_parent_prefixes, self.ipv4_prefixes, self.ipv6_parent_prefixes, self.ipv6_prefixes
+        return self.ipv4_prefixes, self.ipv4_parent_prefixes, self.ipv6_prefixes, self.ipv6_parent_prefixes
 
 
 class RequestASNPeers(RequestBGPapi):
@@ -464,7 +469,6 @@ class RequestASNPeers(RequestBGPapi):
             else:
                 print(f"===> REVIEW: {self.web_url} has no data. <===\n")
 
-            # Return None when there is no IPv4 or IPv6 Peers
             if len(ipv4_peers) == 0:
                 self.ipv4_asn_peers = "No IPv4 Peers"
             else:
@@ -569,7 +573,7 @@ class RequestANSupstreams(RequestBGPapi):
             traceback.print_exc()
 
     
-        # Return output <ASN: 394487 -- Name: Data Truck -- Location: US>
+        # Return sample <ASN: 394487 -- Name: Data Truck -- Location: US>
         return self.ipv4_upstreams_asn, self.ipv6_upstreams_asn
 
 
@@ -579,7 +583,7 @@ if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "1"
+    b = "123456789"
     t1 = RequestASNprefixes(a, b)
     # t1.get_asn_info()
     pprint(t1.get_asn_prefixes())
