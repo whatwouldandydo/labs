@@ -272,7 +272,8 @@ class RequestASNprefixes(RequestBGPapi):
                 ipv6_prefixes_list = data["ipv6_prefixes"]
                 # print(ipv4_prefixes_list)
                 # print(ipv6_prefixes_list)
-
+                
+                # if len(ipv4_prefixes_list) != 0:
                 for line in ipv4_prefixes_list:
                     for k, v in line.items():
                         # print(k)
@@ -280,6 +281,8 @@ class RequestASNprefixes(RequestBGPapi):
                             if v["prefix"] is not None:
                                 parent = v["prefix"]
                                 ipv4_parent_prefixes.append(parent)
+                            # else:
+                            #     ipv4_parent_prefixes.append("No IPv4")
                         elif k == "prefix":
                             ip = v
                         elif k == "description":
@@ -290,13 +293,20 @@ class RequestASNprefixes(RequestBGPapi):
                             ipv4_info = f"{ip} {name} ({location})"
                             # print(ipv4_info)
                             ipv4_prefixes.append(ipv4_info)
+                # else:
+                #     ipv4_parent_prefixes.append("No IPv4")
+                #     ipv4_prefixes.append("No IPv4 Prefixes")
 
+                # if len(ipv6_prefixes_list) != 0:
                 for line in ipv6_prefixes_list:
                     for k, v in line.items():
                         if type(v) == dict:
                             if v["prefix"] is not None:
                                 parent = v["prefix"]
+                                print(parent)
                                 ipv6_parent_prefixes.append(parent)
+                            # else:
+                            #     ipv6_parent_prefixes.append("No IPv6")
                         elif k == "prefix":
                             ip = v
                         elif k == "description":
@@ -307,6 +317,9 @@ class RequestASNprefixes(RequestBGPapi):
                             ipv6_info = f"{ip} {name} ({location})"
                             # print(ipv4_info)
                             ipv6_prefixes.append(ipv6_info)
+                # else:
+                #     ipv6_parent_prefixes.append("No IPv6")
+                #     ipv6_prefixes.append("No IPv6 Prefixes")
 
                 # a = self.web_url
                 # print(a)
@@ -319,14 +332,59 @@ class RequestASNprefixes(RequestBGPapi):
             else:
                 print(f"===> REVIEW: {self.api_endpoint} has no data. <===\n")
 
-            self.ipv4_prefixes = ipv4_prefixes
-            self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
-            self.ipv6_prefixes = ipv6_prefixes
-            self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
-            # pprint(self.ipv4_prefixes)
-            # pprint(self.ipv4_parent_prefixes)
-            # pprint(self.ipv6_prefixes)
-            # pprint(self.ipv6_parent_prefixes)
+            # Return None when there is no IPv4 or IPv6 prefixes
+            # self.ipv4_prefixes = ipv4_prefixes
+            # self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
+            # self.ipv6_prefixes = ipv6_prefixes
+            # self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
+
+
+            # print(f"ipv4_prefixes ----> {ipv4_prefixes}\n")
+            # print(f"ipv4_parent_prefixes ----> {ipv4_prefixes}\n")
+            # print(f"ipv6_prefixes ----> {ipv6_prefixes}\n")
+            # print(f"ipv6_parent_prefixes -----> {ipv6_parent_prefixes}\n")
+
+            # Return None when there is no IPv4 or IPv6 prefixes
+            if len(ipv4_prefixes) == 0:
+                # ipv4_pref = None
+                # self.ipv4_prefixes = ipv4_pref
+                self.ipv4_prefixes = "No IPv4 Prefixes"
+            else:
+                self.ipv4_prefixes = ipv4_prefixes
+
+            if len(ipv4_parent_prefixes) == 0:
+                self.ipv4_parent_prefixes = "No IPv4 Parent Prefixes"
+            else:
+                self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
+
+            if len(ipv6_prefixes) == 0:
+                self.ipv6_prefixes = "No IPv6 Prefixes"
+            else:
+                self.ipv6_prefixes = ipv6_prefixes
+
+            if len(ipv6_parent_prefixes) == 0:
+                self.ipv6_parent_prefixes = "No IPv6 Parent Prefixes"
+            else:
+                self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
+
+            # if len(ipv4_prefixes) != 0:
+            #     self.ipv4_prefixes = ipv4_prefixes
+            # elif len(ipv4_parent_prefixes) != 0:
+            #     self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
+            # elif len(ipv6_prefixes) != 0:
+            #     self.ipv6_prefixes = ipv6_prefixes
+            # elif len(ipv6_parent_prefixes) != 0:
+            #     self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
+            # else:
+            #     # self.ipv4_prefixes = ipv4_prefixes
+            #     # self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
+            #     # self.ipv6_prefixes = ipv6_prefixes
+            #     # self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
+
+            #     self.ipv4_prefixes = None
+            #     self.ipv4_parent_prefixes = None
+            #     self.ipv6_prefixes = None
+            #     self.ipv6_parent_prefixes = None
 
         except Exception as e:
             print(f"===> ERROR: {e.args} <===")
@@ -336,14 +394,13 @@ class RequestASNprefixes(RequestBGPapi):
 
 
 
-
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
-    b = "61138"
+    b = "1"
     t1 = RequestASNprefixes(a, b)
     # t1.get_asn_info()
-    print(t1.get_asn_prefixes())
+    pprint(t1.get_asn_prefixes())
     print(t1.api_endpoint)
     print(t1.web_url)
 
