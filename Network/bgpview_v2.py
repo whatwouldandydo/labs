@@ -805,18 +805,125 @@ class RequestPrefix(RequestBGPapi):
 
         return self.prefix_detail
 
+
+class RequestIPAddress(RequestBGPapi):
+    """ Get public IP address owner, ASN, and country"""
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/ip/ip_address"
+        self.ip_address_details = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_ip_address(self):
+        raw_data = self.run_bgpview_api()
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+
+        try:
+            # ip_list = []
+            # asn_list = []
+
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                ip = data["ip"]
+                # print(ip)
+
+                # if data["ptr_record"] is None:
+                #     dns = "None"
+                # else:
+                #     dns = data["ptr_record"]
+
+                asn_list = []
+
+                # if len(data["prefixes"]) != 0:
+                ip_prefixes_list = data["prefixes"]
+                # print(ip_prefixes_list)
+
+                # asn_list = []
+                if len(ip_prefixes_list) == 0:
+                    prefix = "None"
+                    description = "None"
+                    ip_location = "None"
+                    asn_list.append("None")
+                    # print(asn_list)
+
+                    # asn_list = []
+
+                    # print("Check 0")
+                elif len(ip_prefixes_list) != 0:
+                    # print("Check 1")
+                    for line in ip_prefixes_list:
+                        # print(line)
+                        # input()
+                        # print("Check 2")
+                        if line is not None:
+                            for k, v in line.items():
+                                if k == "prefix":
+                                    prefix = v
+                                    # print(prefix)
+                                # elif k == "name":
+                                #     name = v
+                                #     print(name)
+                                elif k == "description":
+                                    # if v is None:
+                                    description = v
+                                    # print(description)
+                                elif k == "country_code":
+                                    ip_location = v
+                                elif k == "asn":
+                                    asn = v["asn"]
+                                    # print(asn)
+                                    asn_desc = v["description"]
+                                    # print(asn_desc)
+                                    asn_location = v["country_code"]
+                                    if asn is not None:
+                                        asn_info = f"ASN: {asn}, Name: {asn_desc}, Location: {asn_location}"
+                                        # print(asn_info)
+                                        asn_list.append(asn_info)
+                                        # print("Check 3")
+                                # elif type(v) == dict:
+                        # else:
+                            # prefix = "None"
+                            # description = "None"
+                            # ip_location = "None"
+
+
+                ip_info = f"<IP: {ip} Prefix: {prefix} -- Name: {description} -- Location: {ip_location} -- Used by Autonomous Systems: {asn_list}>"
+                # print(ip_info)
+                # ip_list.append(ip_info)
+                self.ip_address_details = ip_info
+
+
+            elif status == "error" and "Malformed input" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid entry. Example: 192.209.63.1 <===\n")
+            else:
+                print(f"===> Unkown Error: Please Review {self.web_url} <===\n")
+                # print(prefix)
+            
+            # print(ip_list)
+
+
+
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+        
+        return self.ip_address_details
+
+
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "168.209.63.0/24"
-    t1 = RequestPrefix(a, b)
+    b = "192.1.3.6"
+    t1 = RequestIPAddress(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_prefix())
+    pprint(t1.get_ip_address())
     print(t1.api_endpoint)
     print(t1.web_url)
 
-    # import datetime
+    # import datetime1010321
+
     # d1 = datetime.datetime.now()
     # t2 = RequestASN(a, b)
     # print(t2.api_endpoint)
