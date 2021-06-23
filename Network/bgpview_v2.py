@@ -215,7 +215,7 @@ class RequestASN(RequestBGPapi):
 
                 # print(f"TESTINGGGGG {self.web_url}")
             else:
-                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
             # return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
@@ -336,8 +336,7 @@ class RequestASNprefixes(RequestBGPapi):
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
-                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
-
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
             # Return None when there is no IPv4 or IPv6 prefixes
             # self.ipv4_prefixes = ipv4_prefixes
             # self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
@@ -467,7 +466,7 @@ class RequestASNPeers(RequestBGPapi):
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
-                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
             if len(ipv4_peers) == 0:
                 self.ipv4_asn_peers = "No IPv4 Peers"
@@ -552,7 +551,7 @@ class RequestANSupstreams(RequestBGPapi):
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
-                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
             # print(ipv4_upstreams)
             # print(ipv6_upstreams)
@@ -627,7 +626,7 @@ class RequestASNdownstreams(RequestBGPapi):
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
-                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
             if len(ipv4_downstreams) == 0:
                 self.ipv4_downstreams_asn = f"AS Number {self.asn_ip_var} NO IPv4 Downstreams"
@@ -727,7 +726,7 @@ class RequestASNixs(RequestBGPapi):
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid Internet Exchange number. <===\n")
             else:
-                print(f"===> REVIEW: {self.web_url} has no data. <===\n")
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
             if len(ixs_list) == 0:
                 self.asn_ixs = f"Internet Exchange ID {self.asn_ip_var} has NO data."
@@ -793,6 +792,8 @@ class RequestPrefix(RequestBGPapi):
                 print(f"===> ERROR: {self.asn_ip_var} Prefix not found in BGP table or not a valid prefix. <===\n")
             elif status == "error" and "Malformed input" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid entry. Example: 192.209.63.0/24. <===\n")
+            else:
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
             if len(prefix_list) == 0:
                 self.prefix_detail = f"No Data on prefix {self.asn_ip_var}"
@@ -897,7 +898,7 @@ class RequestIPAddress(RequestBGPapi):
             elif status == "error" and "Malformed input" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid entry. Example: 192.209.63.1 <===\n")
             else:
-                print(f"===> Unkown Error: Please Review {self.web_url} <===\n")
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
                 # print(prefix)
             
             # print(ip_list)
