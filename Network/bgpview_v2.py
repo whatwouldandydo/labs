@@ -85,8 +85,8 @@ class RequestBGPapi:
             try:
                 web_request = requests.get(f"{bgpview_url}", verify=False)
                 time.sleep(0.5)
-                print(bgpview_url)
-                print(web_request)
+                # print(bgpview_url)
+                # print(web_request)
 
                 if web_request.status_code == 200:
                     meta_data = web_request.json()
@@ -1080,7 +1080,7 @@ class RequestBGPSearch(RequestBGPapi):
                                 else:
                                     ix_info = f"<Internet Exchange ID: {ix_id}, Name: {ix_name}, Location: {ix_city}, {ix_country}>"
                                     ix_list.append(ix_info)
-                                    print(ix_info)
+                                    # print(ix_info)
 
                 else:
                     print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
@@ -1115,32 +1115,54 @@ class RequestBGPSearch(RequestBGPapi):
 
 
 if __name__ == "__main__":
-    a = "https://api.bgpview.io/asn/as_number"
-    # a = "https://api.bgpview.io/asn/as_number/prefixes"
-    # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "1"
-    t1 = RequestBGPSearch(a, b)
-    # t1.get_asn_info()
-    pprint(t1.get_search_result())
-    print(t1.api_endpoint)
-    print(t1.web_url)
+    a = "https://api.bgpview.io/"
+    b = 1
+    c = "2001:1508::/32"
+    d = "193.189.100.205"
+    e = "vietnam"
+    f = "dfdsfdd"
 
-    # import datetime1010321
+    t1 = RequestASN(a, b)
+    # print(t1.get_asn_info())
 
-    # d1 = datetime.datetime.now()
-    # t2 = RequestASN(a, b)
-    # print(t2.api_endpoint)
-    # # print(t2.get_asn_info())
+    t2 = RequestASNprefixes(a, b)
+    # print(t2.get_asn_prefixes())
 
-    # for i in range(65555):
-    # # for i in range(64000, 65555):
-    #     d2 = datetime.datetime.now()
-    #     t2 = RequestASNixs(a, i)
-    #     print(f"Count #{i}:")
-    #     print(t2.get_asn_ixs())
-    #     d3 = datetime.datetime.now()
-    #     print(d2 - d1)
-    #     print(d3 - d2)
-    #     print()
+    t3 = RequestASNPeers(a, b)
+    # print(t3.get_asn_peers())
 
-    
+    t4 = RequestANSupstreams(a, b)
+    # print(t4.get_asn_upstreams())
+
+    t5 = RequestASNdownstreams(a, b)
+    # print(t5.get_asn_downstreams())
+
+    t6 = RequestASNixs(a, b)
+    # print(t6.get_asn_ixs())
+
+    t7 = RequestPrefix(a, c)
+    # print(t7.get_prefix())
+
+    t8 = RequestIPAddress(a, d)
+    # print(t8.get_ip_address())
+
+    t9 = RequestInternetExchange(a, b)
+    # print(t9.get_internet_exchange())
+
+    t10 = RequestBGPSearch(a, e)
+    # print(t10.get_search_result())
+
+
+    import datetime
+
+    d1 = datetime.datetime.now()
+
+    for i in range(65555):
+    # for i in range(64000, 65555):
+        d2 = datetime.datetime.now()
+        t2 = RequestASN(a, i)
+        print(t2.get_asn_info())
+        d3 = datetime.datetime.now()
+        print(f"Running Time: {d2 - d1}")
+        print(f"Query Time: {d3 - d2}")
+        print()
