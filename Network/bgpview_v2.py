@@ -50,20 +50,8 @@ class RequestBGPapi:
         Replace as_number, ip_address/cidr, ip_address, ix_id,
         and digitalocean with valid user entered variable
         """
-        # asn_url = "https://api.bgpview.io/asn/as_number",
-        # asn_prefixes_url = "https://api.bgpview.io/asn/as_number/prefixes",
-        # asn_peers_url = "https://api.bgpview.io/asn/as_number/peers",
-        # asn_upstreams_url = "https://api.bgpview.io/asn/as_number/upstreams",
-        # asn_downstreams_url = "https://api.bgpview.io/asn/as_number/downstreams",
-        # asn_ixs_url = "https://api.bgpview.io/asn/as_number/ixs",
-        # prefix_url = "https://api.bgpview.io/prefix/ip_address/cidr",
-        # ip_address_url = "https://api.bgpview.io/ip/ip_address",
-        # internet_exchanges_url = "https://api.bgpview.io/ix/ix_id",
-        # search_url = "https://api.bgpview.io/search?query_term=digitalocean",
 
         self.data_from_api = None
-        # self.api_status = None
-        # self.api_status_message = None
 
         if "as_number" in self.api_endpoint:
             bgpview_url = self.api_endpoint.replace("as_number", str(self.asn_ip_var))
@@ -81,12 +69,9 @@ class RequestBGPapi:
         """ When API request fails, retry it 3 times with 3 seconds wait """
         query_try = 0
         while query_try != 3:
-            # print(query_try)
             try:
                 web_request = requests.get(f"{bgpview_url}", verify=False)
                 time.sleep(0.5)
-                # print(bgpview_url)
-                # print(web_request)
 
                 if web_request.status_code == 200:
                     meta_data = web_request.json()
@@ -99,7 +84,6 @@ class RequestBGPapi:
 
             except Exception as e:
                 print(f"===> ERROR: {e.args} <===")
-                # print(e.message)
                 traceback.print_exc()
                 print()
 
@@ -116,7 +100,6 @@ class RequestBGPapi:
         str = self.api_status
         str = self.api_status_message """
         return self.data_from_api, self.api_status, self.api_status_message
-        # return self.api_status, self.api_status_message
 
 
 class RequestASN(RequestBGPapi):
@@ -132,74 +115,41 @@ class RequestASN(RequestBGPapi):
 
     def get_asn_info(self):
         raw_data = self.run_bgpview_api()
-        # print(type(data), f">>>>>> {data}")
-        # pprint(data)
-        # status = self.run_bgpview_api()["status"]
-        # print(status)
-        # status_message = self.run_bgpview_api()["status_message"]
-        # print(status_message)
         meta_data = raw_data[0]
-        # print(meta_data)
         status = raw_data[1]
         status_message = raw_data[2]
+
         try:
-            # "ok" or "error""
-            # status = meta_data["status"]
-            # print(status)
-
-            # "Malformed input" or ""Query was successful""
-            # status_message = meta_data["status_message"]
-            # print(status_message)
-
             if status == "error" or "Malformed input" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             elif status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
-                # print(data)
                 asn = data["asn"]
                 asn_name = data["description_short"]
                 asn_location = data["country_code"]
                 asn_date_allocated = data["rir_allocation"]["date_allocated"]
-                # asn_date_allocated = str(data["rir_allocation"]["date_allocated"]).split()
-                # asn_date_allocated = str(list(asn_date_allocated[0]))
                 asn_date_updated = data["date_updated"]
-                # print(type(asn_date_allocated))
-                # print(asn, asn_name, asn_location, asn_date_allocated, asn_date_updated)
 
                 # "assigned", "allocated", "available", "reserved", "unknown"
                 rir_allocation_status = data["rir_allocation"]["allocation_status"]
-                # print(rir_allocation_status)
 
                 # "assigned", "reserved", "unknown" 
                 iana_assignment_status = data["iana_assignment"]["assignment_status"]
-                # print(iana_assignment_status)
 
-                # if rir_allocation_status == "assigned" and iana_assignment_status == "assigned":
-                # if rir_allocation_status == "assigned" or rir_allocation_status == "allocated":
                 if iana_assignment_status == "assigned":
                     if "unknown" not in rir_allocation_status:
-                        # if rir_allocation_status == "assigned":
                         self.asn = f"ASN: {asn}"
                         self.asn_name = f"Name: {asn_name}"
                         self.asn_location = f"Location: {asn_location}"
                         self.asn_date_allocated = f"Created Date: {asn_date_allocated}"
                         self.asn_date_updated = f"Last Update: {asn_date_updated}"
-                    # elif rir_allocation_status == "allocated":
-                # elif rir_allocation_status == "available":
-                # # if rir_allocation_status == "available":
-                #     self.asn = f"{asn} (FREE)"
-                #     self.asn_name = asn_name
-                #     self.asn_location = asn_location
-                #     self.asn_date_allocated = asn_date_allocated
-                #     self.asn_date_updated = asn_date_updated
-                # elif rir_allocation_status == "reserved" and iana_assignment_status == "reserved":
+
                 elif "reserved" in iana_assignment_status and rir_allocation_status:
                     self.asn = f"ASN: {asn}"
                     self.asn_name = "Private AS Number (RFC6996)"
                     self.asn_location = "Use within the Organization Network"
                     self.asn_date_allocated = "N/A"
                     self.asn_date_updated = "N/A"
-                # elif rir_allocation_status == "unknown" and iana_assignment_status == "unknown":
                 elif "unknown" in iana_assignment_status and rir_allocation_status:
                     self.asn = f"ASN: {asn}"
                     self.asn_name = "Not a valid AS Number"
@@ -212,12 +162,8 @@ class RequestASN(RequestBGPapi):
                     self.asn_location = "NEED VALIDATION FROM HUMAN"
                     self.asn_date_allocated = "NEED VALIDATION FROM HUMAN"
                     self.asn_date_updated = "NEED VALIDATION FROM HUMAN"
-
-                # print(f"TESTINGGGGG {self.web_url}")
             else:
                 print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
-
-            # return self.asn, self.asn_name, self.asn_location, self.asn_date_allocated, self.asn_date_updated
 
         except Exception as e:
             print(f"===> ERROR: {e.args} <===")
@@ -237,7 +183,6 @@ class RequestASNprefixes(RequestBGPapi):
     """ Get prefixes IPv4 and IPv6 from the AS number """
     def __init__(self, api_endpoint, asn_ip_var):
         api_endpoint = "https://api.bgpview.io/asn/as_number/prefixes"
-        # self.api_endpoint = api_endpoint
         self.ipv4_prefixes = None
         self.ipv4_parent_prefixes = None
         self.ipv6_prefixes = None
@@ -246,113 +191,56 @@ class RequestASNprefixes(RequestBGPapi):
 
     def get_asn_prefixes(self):
         raw_data = self.run_bgpview_api()
-        # print(type(raw_data))
-        # print(raw_data[1])
         meta_data = raw_data[0]
-        # print(type(meta_data))
-        # print(meta_data)
         status = raw_data[1]
-        # print(type(status))
-        # print(status)
         status_message = raw_data[2]
-        # print(type(status_message))
-        # print(status_message)
 
         try:
-            # "ok" or "error"
-            # status = meta_data["status"]
-            # "Query was successful" or "Malformed input"
-            # status_message = data["status_message"]
             ipv4_prefixes = []
             ipv4_parent_prefixes = []
             ipv6_prefixes = []
             ipv6_parent_prefixes = []
 
-            # if status == "error" or "Malformed" in status_message:
-            # if "error" in meta_data["status"] or "Malformed" in data["status_message"]:
-            # if "error" in status or "Malformed" in status_message:
-            #     print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             if status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
                 ipv4_prefixes_list = data["ipv4_prefixes"]
                 ipv6_prefixes_list = data["ipv6_prefixes"]
-                # print(ipv4_prefixes_list)
-                # print(ipv6_prefixes_list)
                 
-                # if len(ipv4_prefixes_list) != 0:
                 for line in ipv4_prefixes_list:
                     for k, v in line.items():
-                        # print(k)
                         if type(v) == dict:
                             if v["prefix"] is not None:
                                 parent = v["prefix"]
                                 ipv4_parent_prefixes.append(parent)
-                            # else:
-                            #     ipv4_parent_prefixes.append("No IPv4")
                         elif k == "prefix":
                             ip = v
                         elif k == "description":
                             name = v
                         elif k == "country_code":
                             location = v
-
                             ipv4_info = f"<{ip} {name} ({location}>)"
-                            # print(ipv4_info)
                             ipv4_prefixes.append(ipv4_info)
-                # else:
-                #     ipv4_parent_prefixes.append("No IPv4")
-                #     ipv4_prefixes.append("No IPv4 Prefixes")
 
-                # if len(ipv6_prefixes_list) != 0:
                 for line in ipv6_prefixes_list:
                     for k, v in line.items():
                         if type(v) == dict:
                             if v["prefix"] is not None:
                                 parent = v["prefix"]
-                                # print(parent)
                                 ipv6_parent_prefixes.append(parent)
-                            # else:
-                            #     ipv6_parent_prefixes.append("No IPv6")
                         elif k == "prefix":
                             ip = v
                         elif k == "description":
                             name = v
                         elif k == "country_code":
                             location = v
-
                             ipv6_info = f"<{ip} {name} ({location}>)"
-                            # print(ipv4_info)
                             ipv6_prefixes.append(ipv6_info)
-                # else:
-                #     ipv6_parent_prefixes.append("No IPv6")
-                #     ipv6_prefixes.append("No IPv6 Prefixes")
-
-                # a = self.web_url
-                # print(a)
-
-                # print(f"===> REVIEW: {self.web_url} has no data. <===\n")
-                # print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
-
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
                 print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
-            # Return None when there is no IPv4 or IPv6 prefixes
-            # self.ipv4_prefixes = ipv4_prefixes
-            # self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
-            # self.ipv6_prefixes = ipv6_prefixes
-            # self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
 
-
-            # print(f"ipv4_prefixes ----> {ipv4_prefixes}\n")
-            # print(f"ipv4_parent_prefixes ----> {ipv4_prefixes}\n")
-            # print(f"ipv6_prefixes ----> {ipv6_prefixes}\n")
-            # print(f"ipv6_parent_prefixes -----> {ipv6_parent_prefixes}\n")
-
-            # Return sample (<161.49.61.0/24 Converge ICT Network (PH>)
             if len(ipv4_prefixes) == 0:
-                # ipv4_pref = None
-                # self.ipv4_prefixes = ipv4_pref
                 self.ipv4_prefixes = f"AS Number {self.asn_ip_var} has no IPv4 Prefixes"
             else:
                 ipv4_prefixes.insert(0, f"AS Number {self.asn_ip_var} IPv4 Prefixes .....")
@@ -376,25 +264,6 @@ class RequestASNprefixes(RequestBGPapi):
                 ipv6_parent_prefixes.insert(0, f"AS Number {self.asn_ip_var} IPv6 Parent Prefixes .....")
                 self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
 
-            # if len(ipv4_prefixes) != 0:
-            #     self.ipv4_prefixes = ipv4_prefixes
-            # elif len(ipv4_parent_prefixes) != 0:
-            #     self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
-            # elif len(ipv6_prefixes) != 0:
-            #     self.ipv6_prefixes = ipv6_prefixes
-            # elif len(ipv6_parent_prefixes) != 0:
-            #     self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
-            # else:
-            #     # self.ipv4_prefixes = ipv4_prefixes
-            #     # self.ipv4_parent_prefixes = list(dict.fromkeys(ipv4_parent_prefixes))
-            #     # self.ipv6_prefixes = ipv6_prefixes
-            #     # self.ipv6_parent_prefixes = list(dict.fromkeys(ipv6_parent_prefixes))
-
-            #     self.ipv4_prefixes = None
-            #     self.ipv4_parent_prefixes = None
-            #     self.ipv6_prefixes = None
-            #     self.ipv6_parent_prefixes = None
-
         except Exception as e:
             print(f"===> ERROR: {e.args} <===")
             traceback.print_exc()
@@ -412,32 +281,21 @@ class RequestASNPeers(RequestBGPapi):
 
     def get_asn_peers(self):
         raw_data = self.run_bgpview_api()
-        # print(raw_data)
         meta_data = raw_data[0]
         status = raw_data[1]
         status_message = raw_data[2]
-        # print(status)
-        # print(status_message)
-
 
         try:
-            # ipv4_peers = f"AS Number {self.asn_ip_var} IPv4 Peering Partners"
-            # ipv4_peers = list(ipv4_peers)
             ipv4_peers = []
             ipv6_peers = []
 
             if status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
-                # print(data)
                 ipv4_peers_list = data["ipv4_peers"]
                 ipv6_peers_list = data["ipv6_peers"]
 
-                # print(ipv4_peers)
-
                 for line in ipv4_peers_list:
                     for k, v in line.items():
-                        # print(k)
-                        # input()
                         if k == "asn":
                             asn = f"ASN: {v}"
                         elif k == "description":
@@ -445,7 +303,6 @@ class RequestASNPeers(RequestBGPapi):
                         elif k == "country_code":
                             location = f"Location: {v}"
                             ipv4_asn_info = f"<{asn} -- {name} -- {location}>"
-                            # print(ipv4_asn_info)
                             ipv4_peers.append(ipv4_asn_info)
 
                 for line in ipv6_peers_list:
@@ -457,12 +314,7 @@ class RequestASNPeers(RequestBGPapi):
                         elif k == "country_code":
                             location = f"Location: {v}"
                             ipv6_asn_info = f"<{asn} -- {name} -- {location}>"
-                            # print(ipv4_asn_info)
                             ipv6_peers.append(ipv6_asn_info)
-
-                # print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
-                # print(f"===> REVIEW: {self.web_url} has no data. <===\n")
-
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
@@ -479,9 +331,6 @@ class RequestASNPeers(RequestBGPapi):
             else:
                 ipv6_peers.insert(0, f"AS Number {self.asn_ip_var} IPv6 Peering Partners .....")
                 self.ipv6_asn_peers = ipv6_peers
-
-            # pprint(self.ipv4_asn_peers)
-            # pprint(self.ipv6_asn_peers)
 
         except Exception as e:
             print(f"===> ERROR: {e.args} <===")
@@ -513,28 +362,16 @@ class RequestANSupstreams(RequestBGPapi):
                 data = meta_data["data"]
                 ipv4_upstreams_list = data["ipv4_upstreams"]
                 ipv6_upstreams_list = data["ipv6_upstreams"]
-                # print(type(ipv4_upstreams_list))
-                # print(ipv4_upstreams_list)
 
                 for line in ipv4_upstreams_list:
                     for k, v in line.items():
                         if k == "asn":
-                            # asn = dict()
-                            # asn["asn"] = v
                             asn = f"ASN: {v}"
-                            # print(asn) 
                         elif k == "description":
-                            # name = dict()
-                            # name["name"] = v
-                            # print(name)
                             name = f"Name: {v}"
                         elif k == "country_code":
-                            # location = dict()
-                            # location["location"] = v
-                            # print(location)
                             location = f"Location: {v}"
                             ipv4_up_info = f"<{asn} -- {name} -- {location}>"
-                            # print(ipv4_up_info)
                             ipv4_upstreams.append(ipv4_up_info)
 
                 for line in ipv6_upstreams_list:
@@ -547,14 +384,11 @@ class RequestANSupstreams(RequestBGPapi):
                             location = f"Location: {v}"
                             ipv6_up_info = f"<{asn} -- {name} -- {location}>"
                             ipv6_upstreams.append(ipv6_up_info)
-
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
                 print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
-            # print(ipv4_upstreams)
-            # print(ipv6_upstreams)
             if len(ipv4_upstreams) == 0:
                 self.ipv4_upstreams_asn = f"AS Number {self.asn_ip_var} NO IPv4 Upstreams"
             else:
@@ -608,7 +442,6 @@ class RequestASNdownstreams(RequestBGPapi):
                         elif k == "country_code":
                             location = f"Location: {v}"
                             ipv4_down_info = f"<{asn} -- {name} -- {location}>"
-                            # print(ipv4_down_info)
                             ipv4_downstreams.append(ipv4_down_info)
                 
                 for line in ipv6_downstreams_list:
@@ -620,9 +453,7 @@ class RequestASNdownstreams(RequestBGPapi):
                         elif k == "country_code":
                             location = f"Location: {v}"
                             ipv6_down_info = f"<{asn} -- {name} -- {location}>"
-                            # print(ipv6_down_info)
                             ipv6_downstreams.append(ipv6_down_info)
-
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid AS number. <===\n")
             else:
@@ -669,16 +500,11 @@ class RequestASNixs(RequestBGPapi):
 
             if status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
-                # print(type(data))
-                # print(data)
 
                 for line in data:
-                    # print(line)
-                    # print(type(line))
                     for k, v in line.items():
                         if k == "ix_id":
                             ix = f"IX ID: {v}"
-                            # print(ix)
                         elif k == "name":
                             name = v
                         elif k == "name_full":
@@ -686,7 +512,6 @@ class RequestASNixs(RequestBGPapi):
                                 name_full = f"Name: {v} ({name})"
                             else:
                                 name_full = f"Name: {v}"
-                            # print(name_full)
                         elif k == "country_code":
                             country = v
                         elif k == "city":
@@ -696,33 +521,23 @@ class RequestASNixs(RequestBGPapi):
                                 location = f"Location: {v}"
                             else:
                                 location = f"Location: None"
-                            # print(location)
                         elif k == "ipv4_address":
                             if v is not None:
                                 ipv4 = f"IPv4 Address: {v}"
                             else:
                                 ipv4 = f"IPv4 Address: None"
-                            # print(ipv4)
                         elif k == "ipv6_address":
                             if v is not None:
                                 ipv6 = f"IPv6 Address: {v}"
                             else:
                                 ipv6 = f"IPv6 Address: None"
-                            # print(ipv6)
                         elif k == "speed":
                             if v == 0 or v == "0" or v is None:
                                 speed = f"Speed: None"
                             else:
                                 speed = f"Speed: {v}"
-                            # print(speed)
                             ixs_info = f"<{ix} -- {name_full} -- {location} -- {ipv4} -- {ipv6} -- {speed}>"
-                            # print(ixs_info)
                             ixs_list.append(ixs_info)
-                        # elif 
-                        # elif k == "country_code":
-                        #     location = f"Location: {city}, {v}"
-                        #     print(location)
-                    # input()
             elif status == "error" or "Malformed" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid Internet Exchange number. <===\n")
             else:
@@ -753,16 +568,12 @@ class RequestPrefix(RequestBGPapi):
         meta_data = raw_data[0]
         status = raw_data[1]
         status_message = raw_data[2]
-        # print(meta_data)
-        # print(type(meta_data))
 
         try:
             prefix_list = []
-            # print(status, status_message)
 
             if status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
-                # print(data)
 
                 prefix = data["prefix"]
                 name = data["name"]
@@ -781,13 +592,9 @@ class RequestPrefix(RequestBGPapi):
                             as_desc = v
                         elif k == "country_code":
                             as_country = v
-
-                # print(prefix, name, description_short, country, date_allocated, asns)
                 
                 prefix_info = f"<Prefix: {prefix} -- Name: {description_short} -- Location: {country} -- Date Assigned: {date_allocated} | ASN: {asn} Name: {as_name} Location:{as_country}>"
-                # print(prefix_info)
                 prefix_list.append(prefix_info)
-
             elif status == "error" and "Prefix not found" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} Prefix not found in BGP table or not a valid prefix. <===\n")
             elif status == "error" and "Malformed input" in status_message:
@@ -821,88 +628,45 @@ class RequestIPAddress(RequestBGPapi):
         status_message = raw_data[2]
 
         try:
-            # ip_list = []
-            # asn_list = []
-
             if status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
                 ip = data["ip"]
-                # print(ip)
-
-                # if data["ptr_record"] is None:
-                #     dns = "None"
-                # else:
-                #     dns = data["ptr_record"]
 
                 asn_list = []
 
-                # if len(data["prefixes"]) != 0:
                 ip_prefixes_list = data["prefixes"]
-                # print(ip_prefixes_list)
 
-                # asn_list = []
                 if len(ip_prefixes_list) == 0:
                     prefix = "None"
                     description = "None"
                     ip_location = "None"
                     asn_list.append("None")
-                    # print(asn_list)
-
-                    # asn_list = []
-
-                    # print("Check 0")
                 elif len(ip_prefixes_list) != 0:
-                    # print("Check 1")
                     for line in ip_prefixes_list:
-                        # print(line)
-                        # input()
-                        # print("Check 2")
                         if line is not None:
                             for k, v in line.items():
                                 if k == "prefix":
                                     prefix = v
-                                    # print(prefix)
-                                # elif k == "name":
-                                #     name = v
-                                #     print(name)
                                 elif k == "description":
-                                    # if v is None:
                                     description = v
-                                    # print(description)
                                 elif k == "country_code":
                                     ip_location = v
                                 elif k == "asn":
                                     asn = v["asn"]
-                                    # print(asn)
                                     asn_desc = v["description"]
-                                    # print(asn_desc)
                                     asn_location = v["country_code"]
                                     if asn is not None:
                                         asn_info = f"ASN: {asn}, Name: {asn_desc}, Location: {asn_location}"
-                                        # print(asn_info)
                                         asn_list.append(asn_info)
-                                        # print("Check 3")
-                                # elif type(v) == dict:
-                        # else:
-                            # prefix = "None"
-                            # description = "None"
-                            # ip_location = "None"
-
 
                 ip_info = f"<IP: {ip} Prefix: {prefix} -- Name: {description} -- Location: {ip_location} -- Used by Autonomous Systems: {asn_list}>"
-                # print(ip_info)
-                # ip_list.append(ip_info)
-                self.ip_address_details = ip_info
 
+                self.ip_address_details = ip_info
 
             elif status == "error" and "Malformed input" in status_message:
                 print(f"===> ERROR: {self.asn_ip_var} is NOT a valid entry. Example: 192.209.63.1 <===\n")
             else:
                 print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
-                # print(prefix)
-            
-            # print(ip_list)
-
 
 
         except Exception as e:
@@ -928,8 +692,6 @@ class RequestInternetExchange(RequestBGPapi):
         print(status_message)
 
         try:
-            # ix_members_list = []
-
             if status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
                 name = data["name_full"]
@@ -949,8 +711,6 @@ class RequestInternetExchange(RequestBGPapi):
                 for line in asn_members:
                     for k, v in line.items():
                         if k == "asn":
-                            # print(k)
-                            # input()
                             asn = v
                         elif k == "description":
                             as_name = v
@@ -966,7 +726,6 @@ class RequestInternetExchange(RequestBGPapi):
                             else:
                                 speed = v
                                 as_info = f"<ASN: {asn}, Name: {as_name}, Location: {as_location}, IPv4: {ipv4}, IPv6: {ipv6}, Speed: {speed}>"
-                                # print(as_info)
                                 as_info_list.append(as_info)
                     
                     self.internet_exchange_members = as_info_list
@@ -1005,7 +764,6 @@ class RequestBGPSearch(RequestBGPapi):
         try:
             if status == "ok" and "Query was successful" in status_message:
                 data = meta_data["data"]
-                # print(data.keys())
                 asns = data["asns"]
                 ipv4_prefixes = data["ipv4_prefixes"]
                 ipv6_prefixes = data["ipv6_prefixes"]
@@ -1013,10 +771,8 @@ class RequestBGPSearch(RequestBGPapi):
 
                 asn_list = []
                 if len(asns) != 0:
-                    # print(asns)
                     for line in asns:
                         for k, v in line.items():
-                            # print(v)
                             if k == "asn":
                                 as_num = v
                             elif k == "name":
@@ -1026,7 +782,6 @@ class RequestBGPSearch(RequestBGPapi):
                             elif k == "country_code":
                                 as_location = v
                                 as_info = f"<ASN: {as_num}, Name: {as_name}, Description:{as_desc}, Location: {as_location}>"
-                                # print(as_info)
                                 asn_list.append(as_info)
 
                 ipv4_list = []
@@ -1040,9 +795,7 @@ class RequestBGPSearch(RequestBGPapi):
                                 ipv4_location = v
                             elif k == "description":
                                 ipv4_name = v
-                            # else:
                                 ipv4_info = f"<IPv4 Prefix: {ipv4_pref}, Name: {ipv4_name}, Location: {ipv4_location}>"
-                                # print(ipv4_info)
                                 ipv4_list.append(ipv4_info)
 
                 ipv6_list = []
@@ -1051,14 +804,11 @@ class RequestBGPSearch(RequestBGPapi):
                         for k, v in line.items():
                             if k == "prefix":
                                 ipv6_pref = v
-                                # print(ipv4_pref)
                             elif k == "country_code":
                                 ipv6_location = v
                             elif k == "description":
                                 ipv6_name = v
-                            # else:
                                 ipv6_info = f"<IPv4 Prefix: {ipv6_pref}, Name: {ipv6_name}, Location: {ipv6_location}>"
-                                # print(ipv6_info)
                                 ipv6_list.append(ipv6_info)
 
                 ix_list = []
@@ -1067,7 +817,6 @@ class RequestBGPSearch(RequestBGPapi):
                         for k, v in line.items():
                             if k == "ix_id":
                                 ix_id = v
-                                # print(ix_id)
                             elif k == "name_full":
                                 ix_name = v
                             elif k == "country_code":
@@ -1080,8 +829,6 @@ class RequestBGPSearch(RequestBGPapi):
                                 else:
                                     ix_info = f"<Internet Exchange ID: {ix_id}, Name: {ix_name}, Location: {ix_city}, {ix_country}>"
                                     ix_list.append(ix_info)
-                                    # print(ix_info)
-
                 else:
                     print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
@@ -1160,8 +907,8 @@ if __name__ == "__main__":
     for i in range(65555):
     # for i in range(64000, 65555):
         d2 = datetime.datetime.now()
-        t2 = RequestASN(a, i)
-        print(t2.get_asn_info())
+        t2 = RequestInternetExchange(a, i)
+        print(t2.get_internet_exchange())
         d3 = datetime.datetime.now()
         print(f"Running Time: {d2 - d1}")
         print(f"Query Time: {d3 - d2}")
