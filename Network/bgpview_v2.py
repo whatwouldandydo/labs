@@ -907,8 +907,37 @@ if __name__ == "__main__":
     for i in range(65555):
     # for i in range(64000, 65555):
         d2 = datetime.datetime.now()
-        t2 = RequestInternetExchange(a, i)
-        print(t2.get_internet_exchange())
+        t1 = RequestASN(a, i)
+        print(t1.get_asn_info())
+        print()
+        
+        # t2 = RequestASNprefixes(a, i)
+        # print(t2.get_asn_prefixes())
+
+        # t3 = RequestASNPeers(a, i)
+        # print(t3.get_asn_peers())
+
+        # t4 = RequestANSupstreams(a, i)
+        # print(t4.get_asn_upstreams())
+
+        # t5 = RequestASNdownstreams(a, i)
+        # print(t5.get_asn_downstreams())
+
+        # t6 = RequestASNixs(a, i)
+        # print(t6.get_asn_ixs())
+
+        # t7 = RequestPrefix(a, c)
+        # print(t7.get_prefix())
+
+        # t8 = RequestIPAddress(a, d)
+        # print(t8.get_ip_address())
+
+        # t9 = RequestInternetExchange(a, i)
+        # print(t9.get_internet_exchange())
+
+        # t10 = RequestBGPSearch(a, e)
+        # print(t10.get_search_result())
+
         d3 = datetime.datetime.now()
         print(f"Running Time: {d2 - d1}")
         print(f"Query Time: {d3 - d2}")
