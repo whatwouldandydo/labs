@@ -715,7 +715,7 @@ class RequestASNixs(RequestBGPapi):
                             else:
                                 speed = f"Speed: {v}"
                             # print(speed)
-                            ixs_info = f"<{ix} -- {name_full} -- {location} --{ipv4} -- {ipv6} -- {speed}>"
+                            ixs_info = f"<{ix} -- {name_full} -- {location} -- {ipv4} -- {ipv6} -- {speed}>"
                             # print(ixs_info)
                             ixs_list.append(ixs_info)
                         # elif 
@@ -729,9 +729,9 @@ class RequestASNixs(RequestBGPapi):
                 print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
 
             if len(ixs_list) == 0:
-                self.asn_ixs = f"Internet Exchange ID {self.asn_ip_var} has NO data."
+                self.asn_ixs = f"AS Number {self.asn_ip_var} has NO Internet Exchange data."
             else:
-                ixs_list.insert(0, f"Internet Exchange ID {self.asn_ip_var} Information .....")
+                ixs_list.insert(0, f"AS Number {self.asn_ip_var} Internet Exchange Information .....")
                 self.asn_ixs = ixs_list
 
         except Exception as e:
@@ -784,7 +784,7 @@ class RequestPrefix(RequestBGPapi):
 
                 # print(prefix, name, description_short, country, date_allocated, asns)
                 
-                prefix_info = f"<Prefix: {prefix} -- Name: {name} ({description_short}) -- Location: {country} -- Date Assigned: {date_allocated} | ASN: {asn} Name: {as_name} Location:{as_country}>"
+                prefix_info = f"<Prefix: {prefix} -- Name: {description_short} -- Location: {country} -- Date Assigned: {date_allocated} | ASN: {asn} Name: {as_name} Location:{as_country}>"
                 # print(prefix_info)
                 prefix_list.append(prefix_info)
 
@@ -912,14 +912,91 @@ class RequestIPAddress(RequestBGPapi):
         return self.ip_address_details
 
 
+class RequestInternetExchange(RequestBGPapi):
+    """ Get Internet Exchange name, name, and member ASNs, IPv4/IPv6, speed"""
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/ix/ix_id"
+        self.internet_exchange_info = None
+        self.internet_exchange_members = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_internet_exchange(self):
+        raw_data = self.run_bgpview_api()
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+        print(status_message)
+
+        try:
+            # ix_members_list = []
+
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                name = data["name_full"]
+                city = data["city"]
+                country = data["country_code"]
+                ix_asn_members = data["members_count"]
+                asn_members = data["members"]
+
+                if city is None:
+                    ix_info = f"IX: {self.asn_ip_var} -- Name: {name} -- ASN Membership: {ix_asn_members} -- Location: {country}"
+                    self.internet_exchange_info = ix_info
+                else:
+                    ix_info = f"IX: {self.asn_ip_var} -- Name: {name} -- ASN Membership: {ix_asn_members} -- Location: {city}, {country}"
+                    self.internet_exchange_info = ix_info
+
+                as_info_list = []
+                for line in asn_members:
+                    for k, v in line.items():
+                        if k == "asn":
+                            # print(k)
+                            # input()
+                            asn = v
+                        elif k == "description":
+                            as_name = v
+                        elif k == "country_code":
+                            as_location = v
+                        elif k == "ipv4_address":
+                            ipv4 = v
+                        elif k == "ipv6_address":
+                            ipv6 = v
+                        elif k == "speed":
+                            if v == 0:
+                                speed = None
+                            else:
+                                speed = v
+                                as_info = f"<ASN: {asn}, Name: {as_name}, Location: {as_location}, IPv4: {ipv4}, IPv6: {ipv6}, Speed: {speed}>"
+                                # print(as_info)
+                                as_info_list.append(as_info)
+                    
+                    self.internet_exchange_members = as_info_list
+
+            elif status == "error" and "Could not find IX" in status_message:
+                print(f"===> ERROR: {self.asn_ip_var} is NOT a valid entry. <===\n")
+            else:
+                print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
+
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+        
+        return self.internet_exchange_info, self.internet_exchange_members
+
+
+# asns
+# ipv4_prefixes
+# ipv6_prefixes
+# internet_exchanges
+
+
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "192.1.3.6"
-    t1 = RequestIPAddress(a, b)
+    b = "192.168.1.1"
+    t1 = RequestInternetExchange(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_ip_address())
+    pprint(t1.get_internet_exchange())
     print(t1.api_endpoint)
     print(t1.web_url)
 
