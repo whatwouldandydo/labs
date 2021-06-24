@@ -916,7 +916,7 @@ class RequestInternetExchange(RequestBGPapi):
     """ Get Internet Exchange name, name, and member ASNs, IPv4/IPv6, speed"""
     def __init__(self, api_endpoint, asn_ip_var):
         api_endpoint = "https://api.bgpview.io/ix/ix_id"
-        self.internet_exchange_info = None
+        self.internet_exchange_details = None
         self.internet_exchange_members = None
         super().__init__(api_endpoint, asn_ip_var)
 
@@ -940,10 +940,10 @@ class RequestInternetExchange(RequestBGPapi):
 
                 if city is None:
                     ix_info = f"IX: {self.asn_ip_var} -- Name: {name} -- ASN Membership: {ix_asn_members} -- Location: {country}"
-                    self.internet_exchange_info = ix_info
+                    self.internet_exchange_details = ix_info
                 else:
                     ix_info = f"IX: {self.asn_ip_var} -- Name: {name} -- ASN Membership: {ix_asn_members} -- Location: {city}, {country}"
-                    self.internet_exchange_info = ix_info
+                    self.internet_exchange_details = ix_info
 
                 as_info_list = []
                 for line in asn_members:
@@ -980,23 +980,148 @@ class RequestInternetExchange(RequestBGPapi):
             print(f"===> ERROR: {e.args} <===")
             traceback.print_exc()
         
-        return self.internet_exchange_info, self.internet_exchange_members
+        return self.internet_exchange_details, self.internet_exchange_members
 
 
-# asns
-# ipv4_prefixes
-# ipv6_prefixes
-# internet_exchanges
+class RequestBGPSearch(RequestBGPapi):
+    """ Search for word in BGPView.
+    Data return as dict key name asn,
+    ipv4_prefixes, ipv6_prefixes, internet_exchanges """
+    def __init__(self, api_endpoint, asn_ip_var):
+        api_endpoint = "https://api.bgpview.io/search?query_term=digitalocean"
+        self.asn_ip_var = asn_ip_var
+        self.asn_info = None
+        self.ipv4_prefixes_info = None
+        self.ipv6_prefixes_info = None
+        self.internet_exchanges_info = None
+        super().__init__(api_endpoint, asn_ip_var)
+
+    def get_search_result(self):
+        raw_data = self.run_bgpview_api()
+        meta_data = raw_data[0]
+        status = raw_data[1]
+        status_message = raw_data[2]
+
+        try:
+            if status == "ok" and "Query was successful" in status_message:
+                data = meta_data["data"]
+                # print(data.keys())
+                asns = data["asns"]
+                ipv4_prefixes = data["ipv4_prefixes"]
+                ipv6_prefixes = data["ipv6_prefixes"]
+                internet_exchanges = data["internet_exchanges"]
+
+                asn_list = []
+                if len(asns) != 0:
+                    # print(asns)
+                    for line in asns:
+                        for k, v in line.items():
+                            # print(v)
+                            if k == "asn":
+                                as_num = v
+                            elif k == "name":
+                                as_name = v
+                            elif k == "description":
+                                as_desc = v
+                            elif k == "country_code":
+                                as_location = v
+                                as_info = f"<ASN: {as_num}, Name: {as_name}, Description:{as_desc}, Location: {as_location}>"
+                                # print(as_info)
+                                asn_list.append(as_info)
+
+                ipv4_list = []
+                if len(ipv4_prefixes) != 0:
+                    for line in ipv4_prefixes:
+                        for k, v in line.items():
+                            if k == "prefix":
+                                ipv4_pref = v
+                                print(ipv4_pref)
+                            elif k == "country_code":
+                                ipv4_location = v
+                            elif k == "description":
+                                ipv4_name = v
+                            # else:
+                                ipv4_info = f"<IPv4 Prefix: {ipv4_pref}, Name: {ipv4_name}, Location: {ipv4_location}>"
+                                # print(ipv4_info)
+                                ipv4_list.append(ipv4_info)
+
+                ipv6_list = []
+                if len(ipv6_prefixes) != 0:
+                    for line in ipv6_prefixes:
+                        for k, v in line.items():
+                            if k == "prefix":
+                                ipv6_pref = v
+                                # print(ipv4_pref)
+                            elif k == "country_code":
+                                ipv6_location = v
+                            elif k == "description":
+                                ipv6_name = v
+                            # else:
+                                ipv6_info = f"<IPv4 Prefix: {ipv6_pref}, Name: {ipv6_name}, Location: {ipv6_location}>"
+                                # print(ipv6_info)
+                                ipv6_list.append(ipv6_info)
+
+                ix_list = []
+                if len(internet_exchanges) != 0:
+                    for line in internet_exchanges:
+                        for k, v in line.items():
+                            if k == "ix_id":
+                                ix_id = v
+                                # print(ix_id)
+                            elif k == "name_full":
+                                ix_name = v
+                            elif k == "country_code":
+                                ix_country = v
+                            elif k == "city":
+                                ix_city = v
+                                if ix_city is None:
+                                    ix_info = f"<Internet Exchange ID: {ix_id}, Name: {ix_name}, Location: {ix_country}>"
+                                    ix_list.append(ix_info)
+                                else:
+                                    ix_info = f"<Internet Exchange ID: {ix_id}, Name: {ix_name}, Location: {ix_city}, {ix_country}>"
+                                    ix_list.append(ix_info)
+                                    print(ix_info)
+
+                else:
+                    print(f"===> Unkown Error: Please Review {self.web_url}, Status Code: {status}, Status Message:{status_message}<===\n")
+
+                self.asn_ip_var = f'BGPView Search: "{self.asn_ip_var}" '
+
+                if len(asn_list) != 0:
+                    self.asn_info = asn_list
+                else:
+                    self.asn_info = f"No Autonomous System Numbers Found."
+
+                if len(ipv4_list) != 0:
+                    self.ipv4_prefixes_info = ipv4_list
+                else:
+                    self.ipv4_prefixes_info = f"No IPv4 Information Found."
+
+                if len(ipv6_list) != 0:
+                    self.ipv6_prefixes_info = ipv6_list
+                else:
+                    self.ipv6_prefixes_info = f"No IPv6 Information Found."
+                
+                if len(ix_list) != 0:
+                    self.internet_exchanges_info = ix_list
+                else:
+                    self.internet_exchanges_info = f"No Internet Exchange Information Found."
+
+        except Exception as e:
+            print(f"===> ERROR: {e.args} <===")
+            traceback.print_exc()
+
+        return self.asn_ip_var, self.asn_info, self.ipv4_prefixes_info, self.ipv6_prefixes_info, self.internet_exchanges_info
 
 
 if __name__ == "__main__":
     a = "https://api.bgpview.io/asn/as_number"
     # a = "https://api.bgpview.io/asn/as_number/prefixes"
     # a = "https://api.bgpview.io/asn/as_number/peers"
-    b = "192.168.1.1"
-    t1 = RequestInternetExchange(a, b)
+    b = "1"
+    t1 = RequestBGPSearch(a, b)
     # t1.get_asn_info()
-    pprint(t1.get_internet_exchange())
+    pprint(t1.get_search_result())
     print(t1.api_endpoint)
     print(t1.web_url)
 
