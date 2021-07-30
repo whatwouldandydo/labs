@@ -15,9 +15,9 @@ from pprint import pprint
 # Disable self-signed certificate warning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
+# API token stored in secret environment
 numverify_api_key = os.getenv("NUMVERIFY_API_KEY")
 base_url = "http://apilayer.net/api/validate"
-phone_number = ""
 
 
 def phone_number_lookup():
