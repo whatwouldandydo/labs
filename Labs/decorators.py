@@ -7,6 +7,7 @@ def do_twice(func):
     return wrapper_do_twice
 
 
+# Allow insider function to pass as many arguments
 def do_twice2(func):
     def wrapper_do_twice2(*args, **kwargs):
         func(*args, **kwargs)
