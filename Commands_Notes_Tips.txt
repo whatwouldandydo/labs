@@ -1,0 +1,1201 @@
+*********************** How to Handle Complex Data Structures ***********************
+Peeling the data back layer by layer from the outer to the inner.
+
+Is it a List or a Dictionary? Use type() to identify the data type.
+
+List:
+    1. Look at the length len() of the list
+    2. If len() = 1, just grap the first entry e.i. data_list[0]
+    3. If len() is multiple elements, use the for loop with 'break' to see the first entry
+
+Dictionary:
+    1. If it's Dictionary nested inside a List, remove the dictionary from inside the list by creating a new variable to get the first element from the list.
+        data1 = data_list[0]
+    2. Look at the keys()
+        print(data1.keys())
+    3. Look at each key name to find the information that you wanted
+        print(data1["key_name"])
+    4. Once you find the information from the key name, create a new variable for that key name
+        data2 = data1["key_name"]
+    5. When it's a nested dictionary (dictionaries inside a dictionary), repeat Step #2-4 until you find the information you wanted
+    6. Create a for loop with dictionary .items()
+
+        for key_name, val_name in data2.items():
+            print(key_name)
+            print(val_name["nested_key_name"])
+            break
+
+*********************** Tips to use Python Netmiko ***********************
+ipython -i test.py
+'''Use ipython to run the Python file to get interactive mode such as dir(), help(), print() in the code itself.'''
+
+from netmiko import Netmiko
+from netmiko import ConnectHandler
+'''From libary netmiko import class Netmiko'''
+'''Note, the ConnectHandler class is identical to the Netmiko class'''
+
+device_type="cisco_ios"
+'''device_type uses Vendor_OS_Transport. Example: "cisco_ios_serial" '''
+
+session_log="router_session_log.txt"
+'''Save the device output session log to file name, router_session_log.txt'''
+
+my_devices_dict = {
+    "host": "router_name",
+    "username": "User ID",
+    "password": "device password"
+    "device_type": "cisco_nxos", #Use dir(netmiko) to find supported vendors.
+    "global_delay_factor": 5, #Use global_delay_factor to set delay (in second) at the global level.
+}
+
+net_connect = Netmiko(**my_devices_dict)
+'''Always use ** in front of my_devices_dict so Python will run through all the elements in my_devices_dict dictionary.'''
+
+output = net_connect.send_command("show", expect_string=r"")
+'''Use the expect_string argument when the router/device gives a different trailing ouput.'''
+
+output = net_connect.send_command("write mem", delay_factor=4, max_loops=1000)
+'''Use delay_factor for timing of the commands that take longer than 5 seconds to run. delay_factor=4 means quadrupble the delays. By default send_command/second_command_expect wait for about 90 seconds (delay_factor=1). Do not use delay_factor beyond 10. max_loops is the number of iterations before the method gives out an error (default is 500).'''
+
+output = net_connect.send_command_timing("clear ip arp")
+'''Use send_command_timing() for commands that require additional user input such as delete command. send_command_timing will wait for 2 additional seconds once there is no new data available. This is using delay_factor of 1. delay_factor=2 will double this, delay_factor=4 will quadruple.'''
+
+output = net_connect.send_command("show ip route", use_textfsm=True)
+'''Export the show ip route output to TextFSM template (list). To use TextFSM, (1) Git clone ntc-templates from Github, (2) Make sure the Python program is in the same directory as ntc-templates for it to work. (3) Check ntc-templates index.txt file for supported show commands.'''
+
+output = net_connect.send_config_set(commands)
+'''Use send_config_set() to send 1 string command or a list of commands. send_config_set will ouput the commands that you entered.'''
+
+output = net_connect.send_config_from_file(config_file="commands.txt")
+'''Use the commands from the file.'''
+
+output = net_connect.commit()
+save_cfg = net_connect.save_config()
+'''Use save_config() after the send_config_set() to save router configuration. Use commit() for Juniper, NXOS.'''
+
+import logging
+logging.basicConfig(filename="test.log", level=logging.DEBUG)
+logger = logging.getLogger("netmiko")
+'''Turn on longging to troubleshoot issue from Netmiko. Use .write_channel("show version\n") and .read_channel() as your own operations.'''
+
+export NET_TEXTFSM=/path/ntc-templates/templates
+"""TextFSM put the network devices' output to structured data such as list, dictionary, etc ... By default TextFSM look for the /templates/index file in /home directory. Use export NET_TEXTFSM when the ntc-templates directory is different. If TextFSM cannot correlate the template, it returns the ouput to string."""
+
+output = net_connect.send_command("show ip int brie", use_textfsm=True)
+"""Use TextFSM as structured data for the 'show ip int brie' output."""
+
+transfer_dict = netmiko.file_transfer(
+    net_connect, #Your SSH connect to the network device
+    source_file="test1.txt",
+    dest_file="test2.txt", #You can rename the file at the destination
+    direction="put", # "get"
+    overwrite_file=True
+)
+"""You can use file_transfer for SCP (Secure Copy). If the destination file already existed and MD5 hash matches, file_transfer won't run. Limited supported for vendor. May not work with large file such as images."""
+
+device1 = {
+    "host": "cisco1",
+    "device_type": "cisco_ios",
+    "username": username,
+    "use_keys": True, # Use SSH or RSA key for the user
+    "key_file": "/path/test_rsa" #Location of the key
+}
+"""You can use SSH or RSA keys for user authentication."""
+
+*********************** Jinja2 ***********************
+Data Structure Workflow: Variables (CSV, text) > Configuration Template > Output Files
+
+import jinja2
+'''Import jinja2 module'''
+
+{{% set var1 = "Hello" %}}
+"""Use % when set variable."""
+
+{{ variable_name }}
+'''Use {{}} to define a variable in Jinja2. Don't use % when the variable already defined.'''
+
+{{% set var1 = "cisco" %}} #Notice the %
+{{% set var2 = 123 %}}
+{{% set var3 = [var1, var2] %}}
+{{ var3 | length }} #Find list length. No % in used.
+{{ var1 | capitalize }} #Capitalize Cisco
+
+# Jinja2 Comment
+{# This will show (Jinja2 Comment) #}
+
+{% if peer1_ipv6 %}
+command
+{% elif %}
+command
+{% else %}
+{% endif %}
+'''How to use conditionals If/Elif/Else in Jinja2. Make sure "peer1_ipv6" key is a boolen True or False'''
+
+{% for port in range(25) -%}
+interface Gig0/1/{{ port }}
+ switchport mode access
+ switchport access vlan 2021
+!
+{%- endfor %}
+'''How to use the for loop in Jinja2. The {%-} means remove the spacing in front or {-%} remove spacing after, to make the print pretty.'''
+
+----------------- For loop with If statement -----------------
+vrf_template = """
+{# Use the vrf_vars from Python dictionary vrf_jinja = {"vrf_vars": vrf_list} #}
+{%- for vrf in vrf_vars -%}
+
+{# Each Jinja variable must have an element 'vrf' because it's in the loop #}
+vrf definition {{vrf.vrf_name}}
+ rd {{vrf.rd_number}}
+ !
+ {%- if vrf.ipv4_enabled %}
+ address-family ipv4
+  route-target export {{vrf.rd_number}}
+  route-target import {{vrf.rd_number}}
+ exit-address-family
+ {%- endif %}
+ {%- if vrf.ipv6_enabled %}
+ !
+ address-family ipv6
+  route-target export {{vrf.rd_number}}
+  route-target import {{vrf.rd_number}}
+ exit-address-family
+ {%- endif %}
+{% endfor %}
+"""
+
+blue1 = {
+    "vrf_name": "blue1",
+    "rd_number": "100:1",
+    "ipv4_enabled": True,
+    "ipv6_enabled": True
+}
+blue2 = {
+    "vrf_name": "blue2",
+    "rd_number": "100:1",
+    "ipv4_enabled": True,
+    "ipv6_enabled": True
+}
+vrf_list = [blue1, blue2]
+
+# In vrf_template, use the key name vrf_vars as loop {% for vrf in vrf_vars %}
+vrf_jinja = {"vrf_vars": vrf_list}
+
+----------------- Jinja2 Environment -----------------
+"""Use FileSystemLoader to specify where you want to load the template file."""
+"""Use StrictUndefined to generate exception error when Variables are not define. By the default, Jinja2 won't generate error for undefine variables."""
+from jinja2 import FileSystemLoader, StrictUndefined
+from jinja2.environment import Environment
+
+env = Environment(undefined=StrictUndefined)
+#Use Environment object to generate error for undefine variables.
+
+env.loader = FileSystemLoader([".", "~/home/", "~/Documents/"])
+#Use Environment object to load a file from multiple directories.
+
+bgp_variables = {
+    "peer1_ip": "10.255.255.2",
+    "peer1_as": 20,
+    "advertised_route1": "10.10.200.0/24",
+    "advertised_route2": "10.10.201.0/24",
+    "advertised_route3": "10.10.202.0/24",
+}
+
+template_file = "bgp_config.j2"
+template = env.get_template(template_file)
+output = template.render(**bgp_variables)
+
+----------------- Example Code -----------------
+bgp_variables = {
+    "peer1_ip": "10.255.255.2",
+    "peer1_as": 20,
+    "advertised_route1": "10.10.200.0/24",
+    "advertised_route2": "10.10.201.0/24",
+    "advertised_route3": "10.10.202.0/24",
+}
+
+bgp_template = """
+router bgp 10
+ address-family ipv4 unicast
+ neighbor {{peer1_ip}} remote-as {{peer1_as}}
+ network {{advertised_route1}}
+ network {{advertised_route2}}
+ network {{advertised_route3}}
+"""
+
+t = jinja2.Template(bgp_template)   #<--- bgp_template can be an external Jinja2 file .j2 
+t2 = t.render(**bgp_variables)      #<--- bgp_variables is a dictionary and can be external CSV or text file
+print(t2)
+
+----------------- Example Code -----------------
+advertised_routes = ["10.10.200.0/24", "10.10.201.0/24", "10.10.202.0/24"] #<--- Variable advertised_routes
+
+bgp_variables = {
+    "peer1_ip": "10.255.255.2",
+    "peer1_as": 20,
+    "advertised_routes" = advertised_routes,    #<--- Assigned value to variable advertised_routes
+}
+
+template_file = "nxos_bgp_template.j2"
+with open(template_file) as f:
+    bgp_template = f.read()
+
+''' print(bgp_template)
+router bgp 10
+ address-family ipv4 unicast
+ neighbor {{peer1_ip}} remote-as {{peer1_as}}
+ {%- for route in advertised_routes %}  #<--- Jinja2 for loop through advertised_routes value
+ network {{route}}                      #<--- Apply each element from the for loop
+ {%- endfor %}                          #<--- End for loop
+'''
+
+t = jinja2.Template(bgp_template)
+t2 = t.render(**bgp_variables)
+
+----------------- Example Code -----------------
+advertised_routes = ["10.10.200.0/24", "10.10.201.0/24", "10.10.202.0/24"]
+
+bgp_variables = {
+    "peer1_ip": "10.255.255.2",
+    "peer1_as": 20,
+    "peer1_ipv6": True,
+    "advertised_routes" = advertised_routes,
+}
+
+''' print(bgp_template)
+router bgp 10
+ address-family ipv4 unicast
+ neighbor {{peer1_ip}} remote-as {{peer1_as}}
+ {%- for route in advertised_routes %}
+ network {{route}}
+ {%- endfor %}
+ update-source loopback1
+ {% if peer1_ipv6 -%}               #<--- Conditional check in bgp_variables for peer1_ipv6 value
+ address-family ipv6 unicast        #<--- Execute the operation
+ {% endif %}                        #<--- End if statement
+'''
+------------------------------------------------
+
+{% for router_name, ip_addr in router.items() %}
+{{ router_name }} >>> {{ip_addr}}
+    {% if ipv4 %}
+    address-family ipv4 unicast
+    {% end if %}
+{% endfor %}
+'''You can use Dictionary with nested variables. Jinja2 template allows nested loops'''
+
+----------------- Example Code -----------------
+bgp_variables = {
+    "routers": {
+        "r1": "10.10.10.1",
+        "r2": "10.10.10.2",
+        "r3": "10.10.10.3",
+    },
+    "ip_list": [
+        "1.1.1.1",
+        "10.1.1.1",
+        "192.168.1.1"
+    ],
+    "ipv4": True,
+    "ipv6": False,
+}
+
+bgp_template = """
+{% for router_name, ip_addr in router.items() %}
+{{ router_name }} >>> {{ip_addr}}
+    {% for ip in ip_list %}
+    {{ ip }}
+    {% endfor %}
+    {% if ipv4 %}
+    address-family ipv4 unicast
+    {% elif ipv6 %}
+    address-family ipv6 multicast
+    {% end if %}
+{% endfor %}
+"""
+------------------------------------------------
+
+*********************** YAML ***********************
+YAML file (.yml) starts with ---
+
+---
+- 1.1.1.1
+- 2.2.2.2
+- 3.3.3.3
+'''This YAML file will return a List in Python and each element in the list is a String.'''
+
+---
+router1: 1.1.1.1
+router2: 2.2.2.2
+router3: 3.3.3.3
+router4: "No longer {}"
+router5: on
+router6: off
+router7: True
+router8: true
+router9: False
+router10: yes
+router11: 100
+'''This YAML file will return a Dictionary in Python. Each Key and Value in the dictionary is a String. Use " when you have special characters. on, off, True, true, False, yes, no are boolen. router11 will return as an Integer.'''
+
+---
+rtr1:
+  ip_addr: 10.1.1.1
+  username: admin
+  password: user input
+  device_type: cisco_ios
+  routing:
+    - Static
+    - OSPF
+    - BGP
+rtr2:
+  ip_addr: 10.1.1.2
+  username: admin
+  password: user input
+  device_type: juniper_junos
+'''Nested dictionary in YAML. rtr1's key routing will return a nested list.'''
+
+filename = "output.yml"
+with open(filename, "w") as f:
+    output1 = yaml.dump(from_py_dict, f)
+    output2 = yaml.dump(from_py_dict, f, default_flow_style=False)
+    output3 = yaml.dump(from_py_dict, f, default_flow_style=True)
+'''output1 will write to output.yml file as compress form. output2 will write as regular YAML format (easier to read). output3 will write as compress file like you would see in Python.'''
+
+*********************** JSON ***********************
+json.dumps(dict, indent)
+'''dumps method convert a Python object into a JSON string.'''
+
+json.dump(dict, file_pointer, indent)
+'''dump method uses for writing to a JSON file'''
+
+json.load() vs json.loads()
+'''The s stands for string meaning the load the file contents as string.'''
+
+Don't put comma , at the end of the JSON or it will generate error
+
+*********************** CiscoConfParse ***********************
+from ciscoconfparse import CiscoConfParse
+'''From libary ciscoconfparse import class CiscoConfParse'''
+
+cisco_obj = CiscoConfParse("cisco1.txt")
+cisco_obj = cisco_obj.splitlines()
+'''Must convert the cisco1.txt from string to list datastructure for CiscoConfParse to read. Use splitlines() to convert string into list.'''
+
+cisco_obj.find_objects(r"^interface")
+'''Find anything begining a line with interface.'''
+
+cisco_obj.text
+'''Look at the text of cisco_obj variable.'''
+
+cisco_obj.children
+'''Look at the childrend of cisco_obj variable.'''
+
+cisco_obj.is_parent #Check if the cisco_obj is a is_parent
+cisco_obj.is_child  #Check if the cisco_obj is a children
+cisco_obj.siblings  #Check if the cisco_obj has any other objects
+
+match = cisco_obj.find_objects(r"^crypto map CRYPTO")
+match.re_search_children(r"set transform-set ")
+match2 = match[0].text
+'''Use re_search_children to search for objects inside the parent. Match2 is to view the data as clear text.'''
+
+dir(CiscoConfParse)
+"""Use dir() to view options for finding object such as find_objects(), find_objects_w_child(), etc..."""
+
+help(CiscoConfParse.find_objects_w_child())
+"""To see example commands and help options.""""
+
+*********************** Using Pip ***********************
+pip list
+pip3 list
+"""List all the packages that you installed."""
+
+pip freeze > requirements.txt
+pip3 freeze > requirements.txt
+"""Very useful when recreating an environment by exporting all the installed packages to a file."""
+
+pip install -r requirements.txt
+pip3 install -r requirements.txt
+"""Install the pacages from the requirements.txt file."""
+
+*********************** Using Python sys.path ***********************
+To find out where the Python libaries are imported from.
+
+import sys
+from pprint import pprint
+pprint(sys.path)
+"""Use pprint(sys.path) to view all the paths Python is going to search."""
+
+import re
+print(re.__file__)
+"""Use print(.__file__) to find which directory the re libary is used.""""
+
+env | grep PYTHON
+"""To view the current Python path (PYTHONPATH)."""
+
+export PYTHONPATH=/home/newpath
+"""How to set a new python path to /home/newpath."""
+
+*********************** Using TextFSM ***********************
+pip install textfsm
+pip install colorama
+"""Install TextFSM package. Install Colorama for easier to read"""
+
+textfsm.__file__
+"""Find the textfsp.py file location"""
+
+#Output from show_ip_int_brief.txt file
+"""
+SW1#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+Vlan1                  unassigned      YES NVRAM  administratively down down
+FastEthernet0          192.168.1.1     YES NVRAM  down                  down
+GigabitEthernet1/0/1   unassigned      YES unset  down                  down
+GigabitEthernet1/0/2   unassigned      YES unset  up                    up
+GigabitEthernet1/0/3   unassigned      YES unset  administratively down down
+GigabitEthernet1/0/4   unassigned      YES unset  administratively down down
+GigabitEthernet1/0/5   unassigned      YES unset  administratively down down
+GigabitEthernet1/0/6   unassigned      YES unset  up                    up
+GigabitEthernet1/0/7   unassigned      YES unset  up                    up
+GigabitEthernet1/0/8   unassigned      YES unset  administratively down down
+SW1#
+"""
+
+#Code in file name show_ip_int_brief.template
+#Define your fields to extract. It will extract the data as Column.
+# Value VAR_NAME (regex_pattern)
+
+Value INTERFACE (^\S+)
+"""(1) create variable name INTERFACE (2) match begining of the line ^ (3) non-whitespace value \S (4) match one or more times + (6) This will catch Gig0/1 or Gi1/0/1."""
+
+Value IP_ADDR (\S+)
+"""Match the IP-Address column. Notice not using begining of the line ^"""
+
+Value LINE_STATUS (up|down)
+Value LINE_PROTOCOL (up|down)
+"""Match up or down"""
+
+
+#Start of the FSM
+Start
+  ^Interface.*Protocol\s$$ -> ShowIPIntBrief
+"""Remove the header row 'Interface  IP-Address  OK? Method Status  Protocol'
+  (1) begining of the ^ (2) match Interface (3) any character after the Interface .
+  (4) zero or more time * (5) match Protocol (6) any whitespace \s
+  (7) end of the line $ must use $$ of TextFSM (8) then transition to ShowIPIntBrief state."""
+
+ShowIPIntBrief
+  ^${INTERFACE}\s+${IP_ADDR}.*${LINE_STATUS}\s+${LINE_PROTOCOL}\s*$$ -> Record
+"""In the ShowIPIntBrief state (1) match begining of the line ^ variable ${INTERFACE} whitespace \s and one or more times + (2) match variable ${IP_ADDR}) whitespace \s and one or more times +
+(3) match variable ${LINE_STATUS} whitespace \s and one or more times +
+(4) match variable ${LINE_PROTOCOL} whitespace \s zero or more times * and end of line $$
+(5) then start the Record operation."""
+
+
+#Implicit OEF and Record
+EOF
+
+#Run TestFSM script
+# textfsm.py <your_template_file> <your_output_text_file>
+textfsm.py show_ip_int_brief.template show_ip_int_brief.txt
+
+*********************** Arista eAPI ***********************
+# Using low level code to connect to eAPI
+
+import requests
+import json
+from getpass import getpass
+from pprint import pprint
+
+#Disable the SSL warning of self-signed cert
+from urllib3.exceptions import InsecureRequestWarning
+requests.pacages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
+if __name__ = "__main__":
+
+    http_headers = {Content-Type": "application/json-rpc;"}
+    host = "arista8.lab"
+    port = 443
+    username = USERNAME
+    password = getpass()
+
+    url = f"https://{host}:{port}/command-api"
+
+    cmds = [
+        "disable", #Get me out of enable mode
+        {"cmd": "enable", "input": ""}, #Enable security and no enable password
+        "config terminal",
+        "vlan 222",
+        "name TTT",
+    ]
+
+    json_payload = {
+        "jsonrpc": "2.0",
+        "method": "runCmds",
+        "params": {"version":1, "cmds": cmds, "format": "json"},
+        "id": "1",
+    }
+    json_data = json.dumps(json_payload) #Convert the json_payload as string
+    http_headers["Content-lenght"] = str(len(json_data)) #Define how long is the content length
+
+    # Make request or post to the Arista API
+    req = requests.post(
+        url,
+        headers=http_headers,
+        auth=(username, password),
+        data=json_data,
+        verify=False, #Don't care if this a self-signed cert
+    )
+
+    # Get a respond back from the API
+    response = req.json()
+    pprint(response)
+    #[{}, {}, {}, {}, {}] = config succeeded. A list with 5 empty dict because there were 5 commands applied
+
+----------------------------------------------------
+# Using pyeapi module
+
+pip list | grep pyeapi
+
+import pyeapi
+pyeapi.__version__
+
+connection = pyeapi.client.connect(
+    tranport = "https",
+    host = "device_name_ip",
+    username = "USERNAME",
+    password = getpass(),
+    port = "443",
+)
+
+device = pyeapi.client.Node(connection)
+show_cmds = device.enable(["show ip apr", "show version"])
+print(show_cmds)
+#show_cmds[0] = show ip arp output
+#show_cmds[1] = show version output
+
+# Configure Device using pyeapi
+cfg_cmds = ["vlan 100", "name OneH", "vlan 200", "name TwoH"]
+cfg_output = device.config(cfg_cmds)
+print(cfg_output)
+#[{}, {}, {}, {}] = config succeeded. A list with 4 empty dict because there were 4 commands applied
+
+----------------------------------------------------
+nano ~/.eapi.config
+"""You can create .eapi.conf file to store the devices for pyeapi to connect to"""
+[connection:arista8]
+host: arista8.lab
+username: USERNAME
+password: PASSWORD
+tranport: https
+
+[DEFAULT] # Make username, password, tranport as global for all in eapi.conf
+username: USERNAME
+password: PASSWORD
+tranport: https
+
+
+import pyeapi
+device1 = pyeapi.connect_to("arista8) #You have to remember where eapi.conf located
+print(device1)
+
+*********************** Using iPython Debugger (ipdb) ***********************
+import ipdb
+
+ipdb.set_strace()
+"""Put it on top of the code to set the starting of the debugger"""
+
+Debugger Option/Command:
+n = next
+p = print (p device)
+pp = pprint (pp device)
+dir(device) = To view all the available objects in connection
+!device.model = Executing command device.model inside the debugger
+!device.version
+!help(device.version)
+
+*********************** Using XML and NX-API  ***********************
+Root Node
+Child Nodes - Child Nodes can only have 1 Parent Node
+Sibling Nodes - Child nodes that have the same Paranet node
+Ancestor Node - Root Node
+
+ElementTree/lxml
+* Element Nodes - Tag names in the XML e.g. <tag_1> <tag_1-1> </tag_1-1> </tag_1>
+* Text Nodes - Treat text as an attribute of the Element Node e.g. <hardware>Text_Cisco</hardware>
+* Attribute Nodes - Treat the attribute as an attribute of the Element Node e.g. <contract>fake_attribute=yes</contract>
+
+import xmltodict
+xmldata = xmlfile.read().strip()
+my_xml = xmltodict.parse(xmldata)
+"""xmltodict libary converts XML to an ordered Python dictionary OrderedDict()."""
+"""When XML Element Node names are the same, Python returns a list with the text elements inside it."""
+
+my_xml = xmltodict(xmldata, force_list={"Key_Name": True})
+"""Force Python to return a list with 1 element inside it."""
+
+import xml.ElementTree.etree as etree
+"""Use to read xml with decode and encode"""
+
+import lxml import etree
+"""Same as xml Use to read xml with decode and encode but works with NALPAM"""
+
+# Convert string to XML
+my_xml = etree.fromstring("xmlfile")
+
+# Convert XML to string
+my_xml = etree.tostring("xmlfile", encoding="unicode")
+
+# Print out all the tag names
+my_xml.tag
+
+# Print out the text associated with the tag
+my_xml.text
+
+# Only find the tag name connected directly the Root tree. Won't find deeper from the tree.
+my_xml.find("Tag Name")
+
+# Find the first tag name in the tree using ./
+my_xml.find("./Tag Name")
+
+# Find all occurrences of the tag name .//
+# .tag and .text won't work with findall() method
+my_xml.findall(".//Tag Name")
+
+XML Namespaces (nf) use to uniquely identify the element tag names to avoid overlap when working with large XML data. This causes a complexity when find() tag names.
+## The file begins <?xml version="1.0" encoding="ISO-8859-1"?> and needs to open as "rb" binary
+## XML Namespaces start with nf
+## xmlns="http://www.cisco.com/nsox:1.0:sysmgrcli is the default namespace
+<nf:rpc-reply rpc-reply xmlns:nf="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns="http://www.cisco.com/nsox:1.0:sysmgrcli">
+ <nf:data>
+  <show>
+   <version>
+    ...
+   </version>
+  </show>
+ </nf:data>
+</nf:rpc-reply>
+
+def load_xml_file(filename):
+    # The file begins <?xml version="1.0" encoding="ISO-8859-1"?>
+    # and needs to open as binary
+    with open(filename, "rb") as f:
+        xml_file = f.read().strip()
+        return etree.fromstring(xml_file)
+
+if __name__ == "__main__":
+
+    filename = "show_version.xml"
+    show_version = load_xml_file(filename)
+    print(show_version) # <Element {urn:ietf:params:xml:ns:netconf:base:1.0}rpc-reply at 0x7f701b5e2230>
+
+    a = show_version.nsmap
+    print(a) # {'nf': 'urn:ietf:params:xml:ns:netconf:base:1.0', None: 'http://www.cisco.com/nxos:1.0:sysmgrcli'}
+
+    b = show_version.find(".//{*}proc_board_id")
+    print(b) # <Element {http://www.cisco.com/nxos:1.0:sysmgrcli}proc_board_id at 0x7f5c34e7c2d0>
+    print(b.tag) # {http://www.cisco.com/nxos:1.0:sysmgrcli}proc_board_id
+    print(b.text) # TM60363221B
+    
+# Find a namespace tag name
+my_xml.find("{*}/data")
+
+# Find a child tag name from namespaces
+my_xml.find(".//{*}version")
+
+
+# Use NX-API Json-rpc
+import nxapi_plumbing
+
+net_connect = nxapi_plumbing.Device(
+    api_format="jsonrpc",
+    host="lab1.dns.com",
+    username="USERNAME",
+    password=getpass(),
+    transport="https",
+    port=8443,
+    verify=False, #Disable self-signed error
+)
+
+cmds = ["show ip route", "show ip arp"]
+output = net_connect.show("show version") #Return structured data
+output = net_connect.show_list(cmds) #Use show_list() methods for multiple commands
+output = net_connect.show_list(cmds, raw_text=True) #Use cli_ascii for Post and return data as 1 string
+output = net_connect.checkpoint(filename="router1.txt") #Create a snapshot of the device for rollback
+output = net_connect.config_list(cmds) #Config the device via API
+
+## Use NX-API XML
+## Need to use loop to get the output from XML format
+import nxapi_plumbing
+from lxml import etree
+
+net_connect = nxapi_plumbing.Device(
+    api_format="xml",
+    host="lab1.dns.com",
+    username="USERNAME",
+    password=getpass(),
+    transport="https",
+    port=8443,
+    verify=False, #Disable self-signed error
+)
+
+# Print "Interface: Ethernet1/1; State: up; MTU: 1500"
+show_interface_eth1_1 = net_connect.show("show interface eth1/1")
+interface = show_interface_eth1_1.find(".//{*}interface")
+admin_state = show_interface_eth1_1.find(".//{*}admin_state")
+mtu = show_interface_eth1_1.find(".//{*}eth_mtu")
+print(f"Interface: {interface.text}; State: {admin_state.text}; MTU: {mtu.text}")
+print()
+
+# Print each show command from show_list()
+cmds = ["show system uptime", "show system resources"]
+show_systems = net_connect.show_list(cmds)
+
+for output in show_systems:
+    output = etree.tostring(output, encoding="unicode")
+    print("*" * 40)
+    print(output)
+    print("*" * 40)
+
+# Get code 200 from each configured command
+cfg_cmds = [
+    "interface loopback111",
+    "description nxapi_plumbing config 1",
+    "no shut",
+    "interface loopback222",
+    "description nxapi_plumbing config 2",
+    "no shut",
+]
+
+cfg_output = net_connect.config_list(cfg_cmds)
+
+for cli in cfg_output:
+    # print(cli) # <Element output at 0x7f87a31767d0>
+    # print(cli.tag) # output
+    # print(cli.text) # blank 
+    cli = etree.tostring(cli, encoding="unicode")
+    print(cli) # <code>200</code>
+    print("-" * 40)
+
+*********************** NETCONF and Juniper's PyEZ ***********************
+NETCONF Layer: Secure Transport > Messages > Operations > Content
+1. Secure Transport = SSH, TLS, (BEEP/TLS), (SOAP/HTTP/TLS)
+2. Messages = <rpc>, <rpc-reply>, <notification>
+3. Operations = <edit-config>
+4. Content = Configuration Data, Notification Data
+
+## Low level libary to use with NETCONFI
+ncclient
+
+## Juniper PyEZ libary to use with Juniper devices
+jnpr.junos
+from jnpr.junos import Device
+
+a_device = Device(host="lab1.dns", user="USERNAME", password="PASSWORD")
+a_device.open()
+print(a_device.hostname) # Device hostname
+print(a_device.port) # Device NETCONF port
+print(a_device.user) # Device username
+
+## Use Ethernet Port table from the Juniper PyEZ
+from jnpr.junos.op.ethport import EthPortTable
+ports = EthPortTable(a_device)
+ports.get() #Returns a dictionary like object
+print(ports)
+print(ports.keys())
+print(ports.values())
+print(ports.items()) #Must use loop to see values in each key or use list line below
+list(ports["fe-0/0/1"].items()) #Use list when items() return data type <zip>
+
+## Use ARP Table from the Juniper PyEZ
+from jnpr.junos.op.arp import ArpTable
+arp_entries = ArpTable(a_device)
+arp_entries.get()
+
+## Route Table from the Juniper PyEZ
+from jnpr.junos.op.routes import RouteTable
+
+
+## Use Config to push configuration
+from jnpr.junos.utils.config import Config
+a_device.timeout = 60 #Change default timeout to 60 seconds for commands take longer to finish
+cfg = Config(a_device) #Create a config object
+cfg.lock() #Same as Juniper "config exclusive"
+
+# format="set" is a set command. merge=True is a increament command. merge=False is a replace command
+cfg.load("set system host-name test123", format="set", merge=True)
+
+cfg.diff() #Same as Juniper "show | compare"
+cfg.commit() #Save the config
+cfg.rollback(0) #Rollback to 0
+
+# Config changes from a file. Format="text" is a text file. merge=False good for replace static routes
+cfg.lock()
+cfg.load(path="commands.conf", format="text", merge=False)
+
+# Config changes using XML format
+# Using Juniper command "show config | display xml" to view XML format
+cfg.lock()
+cfg.load(path="commands.xml", format="xml", merge=True)
+
+# Using commit confirm for auto rollback
+cfg.commit(confirm=1) #Commit confirm time in 1 minute
+
+# Overwrite the current running config with load config file commands.xml
+cfg.load(path="commands.xml", format="xml", overwrite=True)
+
+## Juniper PyEZ RPC 
+## Use Juniper command "display xml rpc" to see the RPC XML tag name. Replace - with _ in the naming convention.
+from jnpr.junos import Device
+from lxml import etree
+a_device.open()
+
+# show version | display xml rpc
+# <get-software-information> = get_software_information()
+xml_out = a_device.rpc.get_software_information()
+print(etree.tostring(xml_out, encoding="unicode"))
+
+*********************** NALPAM ***********************
+NALPAM's goal is to create a standard set of operations across a range of platforms.
+
+Operations fall into 2 general categories:
+(1) Config Operations
+device.get_config("running") #Get the running-config from the device
+
+(2) Getter Operations
+device.load_merge_candidate(filename="config.conf") # Replacing part of the configuration
+device.load_replace_candidate(filename="config.txt") # Replacing full configuration
+device.compare_config()
+device.discard_config()
+device.commit_config()
+device.rollback()
+
+# NALPAM Support for Platforms
+https://napalm.readthedocs.io/en/latest/support/
+
+# Cisco IOS (Netmiko connection object)
+napalm_conn.device
+<netmiko.cisco.cisco_ios.CiscoIosSSH object at 0x7fde2411d358>
+
+# Arista (pyeapi connection object)
+napalm_conn.device
+Node(connection=EapiConnection(transport=https://arista1.lasthop.io:443//command-api))
+
+# Juniper (PyEZ device object)
+type(napalm_conn.device)
+<class 'jnpr.junos.device.Device'>
+
+# Pip install and use NALPAM
+pip install napalm
+pip install napalm==2.4 # Install specific version of napalm
+
+from napalm import get_network_driver
+
+# New way to create cisco3 dictionary.
+cisco3 = {
+    "hostname": "cisco3.com",
+    # "platform": "nxos", # Cannot have platform and device_type keys are the same time
+    "device_type": "nxos",
+    "username": username,
+    "password": password,
+    "optional_args": {"port": 8443},
+}
+
+# Get the "ios" to new variable device_type = "ios"
+device_type = cisco3.pop("device_type")
+
+# Searhc in NALPAM for the IOSDriver class driver
+driver = get_network_driver(device_type)
+
+# Create a Cisco IOS instance for cisco3.
+# cisco3 dict no longer has device_type key because it was popped at device_type=cisco3.pop("device_type)
+device = driver(**cisco3)
+
+# Establish a connection to cisco3
+device.open()
+
+# Perform any operations (Getter or Config) you want 
+print(device.get_facts())
+print(device.compare_config())
+
+# Cisco NXOS (Archive) and IOS (enable ip scp) features to work with load_merge_candidate() or load_replace_candidate().
+# NXOS checkpoint _get_checkpoint_file() function requires saving the running-config to local file first then commit.
+
+if "nxos" in device.platform:
+    filename = f"{device.hostname}-checkpoint.txt"
+    backup = device._get_checkpoint_file()
+    with open(filename, "w") as f:
+        f.write(backup)
+    device.load_replace_candidate("nxos_replace_cfg.txt")
+    print(device.compare_config())
+    print(device.discard_config()) or device.commit()
+    print(device.compare_config())
+    device.close()
+else:
+    raise ValueError("Checkpoint requires NX-OS")
+
+*********************** SSH and Concurrency ***********************
+Threads
+- Only one Python process is running on the machine
+- In that one process, there are many Threads. New threads can start while existing threads waiting for responses from the network devices (IO).
+
+Processes
+- Multiple Python processes are running on the machine. Depend on the CPUs.
+- Each Python process has one Thread
+
+# This is the legacy way of using Concurrency
+import threading
+from multiprocessing import Process
+
+.start() to start the Thread or Process
+.join() means waiting for the last Thread or Process to complete
+
+from netmiko import ConnectHandler
+def ssh_conn(device):
+    net_connect = ConnectHandler(**device)
+    return net_connect.find_prompt()
+    
+threads = []
+for device in device_list:
+    th = threading.Thread(target=ssh_conn, args=(device, "show version"))
+    threads.append(th)
+    th.start()
+
+for t in threads:
+    t.join()
+
+# New way of using Concurrency. Must use Python version 3.2 or above.
+# This makes it easier to switch between Threading or Processing and sharing resources.
+from concurrent.futures import ThreadPoolExecutor, wait, as_completed
+from concurrent.futures import ProcessPoolExecutor, wait, as_completed
+
+max_threads = 4
+pool = ThreadPoolExecutor(max_threads)
+Thread_List = []
+for a_device in device_list:
+    # pool.sumbit = start the a child thread
+    future = pool.submit(ssh_conn, a_device)
+    Thread_List.append(future)
+
+# Same as join() operation wait for the last Thread or Process to finish.
+wait(Thread_List)
+for future in Thread_List:
+    print(future.result())
+    """Do something else"""
+
+# as_completed means concurrent don't have to wait for all the threads to complete to begin Execute
+for future in as_completed(Thread_List):
+    print(future.result())
+
+# Clean up version of ThreadPool after its done 
+with ThreadPoolExecutor(max_threads) as pool:
+    Thread_List = []
+    for a_device in device_list:
+        future = pool.submit(ssh_conn, a_device)
+        Thread_List.append(future)
+
+    for future in as_completed(Thread_List):
+        print(future.result())
+        """Do something else"""
+
+# .map(ssh_conn, device_list) means take each element from the device_list,
+# and pass that element into the ssh_conn as an argument.
+# No longer need the for loop using .sumbit()
+with ThreadPoolExecutor(max_threads) as pool:
+        all_connections = pool.map(ssh_conn, a_device, cmd_list)
+
+    for future in all_connections:
+        print(future.result())
+        """Do something else"""
+
+cmd_list = ["show ip arp", "show version"]
+with ThreadPoolExecutor(max_threads) as pool:
+        all_connections = pool.map(ssh_conn, a_device, cmd_list)
+
+    for future in all_connections:
+        print(future.result())
+        """Do something else"""
+        
+*********************** REST API ***********************
+Use the "curl" command to view the API endpoint. Different Linux distro has different options for curl.
+
+curl --insecure
+"""Use the --insecure to workaround with self-sign https"""
+
+curl | jq
+"""Use | jq to return the get in JSON format"""
+
+## Use the Python requests libary to access REST API
+import requests
+
+# Disable self-sign SSL cert
+from urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
+url = "https://api.gethub.com"
+token = "32849dsfk234l"
+
+# Use POSTMAN browser add-on to find the correct header
+http_headers = {"accept": "application/json; version=2.4;"}
+if token:
+    http_headers["authorization"] = f"Token {token}"
+
+# verify=False means don't check the https cert
+response = requests.get(url, headers=http_headers, verify=False)
+response = response.json()
+print(response)
+
+payload = {"address": "192.0.2.101/32"}
+
+# Create new API object
+requests.post(api_url, headers=http_headers, verify=False, data=json.dumps(payload))
+
+# Modify existing API object. Use for loop to get the key name to modify.
+requests.put(api_url, headers=http_headers, verify=False, data=json.dumps(payload))
+
+# Delete an API object. response.status_code = 204
+requests.delete(api_url, headers=http_headers, verify=False)
+
+*********************** Python Tools and Testing ***********************
+# Pylint - formatting style when writing code (I don't like it).
+pip install pylint
+pylint my_python_code.py # how to use pylint
+
+# pycodestyle = pep8- formatting style when writing code
+pip install pycodestyle
+pycodestyle my_python_code.py
+
+# PyFlakes - checking for errors or problems in your code
+
+# pylama - wraps multiple tools together
+# Use pycodestyle and PyFlakes
+pylama -o ../setup.cfg my_python_code.py
+
+# Python Black - auto formatter of your code. Search for Git repo python black.
+# Check all the Python in the current directory and what file would black change
+black --check . 
+
+# Black modify the code in the file
+black my_python_code.py
+diff my_python_code.py my_python_code2.py
+
+# pytest - test your code
+pip install pytest
+py.test -s -v test_python_code.py # Run pytest to test_python_code.py
+
+# @pytest.fixture reuses one SSH connection because each function ates a new SSH connection.
+import pytest
+
+@pytest.fixture(scope="module")
+def netmiko_conn():
+    net_connect = ConnectHandler(
+        host="sw1.com",
+        device_type="cisco_ios",
+        username=input("Username: "),
+        password=getpass(),
+    )
+
+    def fin():
+        net_connect.disconnect()
+
+    request.addfinalizer(fin)
+    # addfinalizer(fin) is a graceful teardown of SSH connection
+    
+    return net_connect
+
+def test_find_prompt(netmiko_conn): #
+    assert "sw1#" in netmiko_conn.find_prompt()
+
+def test_send_command(netmiko_conn):
+    output = netmiko_conn.send_command("show version")
+
+# Use pytest with Travis CI (Continuous Integration)
+# Travis CI same as TeamCity
+
+*********************** TCP/IP Tuning (iPerf) ***********************
+TCP Window - the maximum of 65,535 or 64KBytes of data allow to be send to receiver's received buffer. This causes bandwith waste because of the sender can only send 44 packets to the receiver per second. My cable speed is 100Mbits/sec with 10ms delay. I only use 5.2Mbits/sec when TCP window is 65535.
+- 65535 / 1460 MSS = 44 packets per second or the receiver's buffer is full
+- 65535 * 8 / 0.01 = 5,242bits/sec or 5.2Mb
+
+Window Scaling - best use in the long fat network with high delay such as cable, DSL, fiber, satellite. Because it multiplies the TCP Window with Scaling Factor. Scaling Factor calculates as 2^n where n=14 (16,384) is the maximum.
+- 65535 * 2^7 / 1460 MSS = 5,745 packets per second or the receiver's buffer is full
+- 8,388,480 * 8 / 0.01 = 6,710,784,000 bits/sec or 6.7Gb. This won't happen because the TCP/IP stack will use smaller TCP Window and Scaling Factor for the receiver's buffer to bring the value below 100Mbits/sec.
+
+1. Use iPerf UDP test to determine the true speed
+1.2. iperf -b1.0G #-b1.0G = bandwith 1Gbits
+
+2. Calculate Bandwidth Delay Product (BDP)
+2.2. Bandwidth Delay Product in Bytes = Bandwidth(bit) / 8 * RTT(Round Trip Time)
+2.3. 1,200,000,000(1.2Gb) / 8 * 0.060 (60ms) = 9,000,000 Bytes or 9MB
+
+3. Calculate the Throughput from Bandwidth Delay Product
+3.2. Throughput in bits/sec = TCPWindow * 8 / RTT
+3.3. Use TCPWindow from Sender (net.ipv4.tcp_wmem max)
+3.4. 4,194,304 Bytes * 8 / 0.06 = 559,240,533 bits/sec or 559Mbits/sec
+3.4.1. Throughput 559Mb is less than 1.2Gb meaning TCP/IP Tuning is required
+3.5. 8,388,608 Bytes * 8 / 0.06 = 1,118,481,066 bits/sec or 1.1Gbits/sec
+3.5.1. Throughput 1.1Gb is close to 1.2Gb meaning TCP/IP Tuning may needed
+
+4. Tune TCP/IP receiver buffer (rmem_max) and sender buffer (wmem_max) to meet true throughput
+
+rmem_max is the maximum receive socket buffer size in bytes.
+net.ipv4.tcp_rmem = min default max
+- min = 4K
+- default = 87380 or 65535 with tcp_adv_win_scale and tcp_app_win:0
+- max = default between 87380 and 6MB. Doesn't override net.core.rmem_max and net.core.rmem_max needs configured manually.
+- Recommended net.core.rmem_max value = net.ipv4.tcp_rmem max multiplies by 2 or more
+
+wmem_max is the maximum send socket buffer size in bytes.
+net.ipv4.tcp_wmem = min default max
+- min = 4K
+- default = 16384. This value overrides net.core.wmem_default used by other protocols. Usually lower than net.core.wmem_default
+- max = default between 64KB and 4MB. Doesn't override net.core.wmem_max
+- Recommended net.core.wmem_max value = net.ipv4.tcp_wmem max multiplies by 2 or more
+
+https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt
+tcp_rmem = net.ipv4.tcp_rmem
+tcp_wmem = net.ipv4.tcp_wmem
+
+https://www.ateam-oracle.com/tcpip-tuning
+* net.core.rmem_default - Default memory size of receive(rx) buffers used by sockets for ALL protocols. Value is in bytes.
+* net.core.rmem_max - Maximum memory size of receive(rx) buffers used by sockets for ALL protocols. Value is in bytes.
+* net.core.wmem_default - Default memory size of send(tx) buffers used by sockets. Value is in bytes.
+* net.core.wmem_max - Maximum memory size of send(tx) buffers used by sockets. Value is in bytes.
+* net.ipv4.tcp_rmem - TCP specific setting for receive buffer sizes [min, default, max]. The max value can’t be larger than the equivalent net.core.rmem_max. Values are in bytes.
+* net.ipv4.tcp_wmem - TCP specific setting for send buffer sizes [min, default, max]. The max value can’t be larger than the equivalent net.core.wmem_max. Value are in bytes.
+* net.core.netdev_max_backlog - Incoming connections backlog queue is the number of packets queued when the interface receives packets faster than kernel can process them. Once this number is exceeded, the kernel will start to drop the packets.
+
+# Capture the current sysctl settings for rollback
+ubuntu@~$ sudo sysctl -a | egrep "[wr]mem" | egrep "core|tcp"
+net.core.rmem_default = 212992
+net.core.rmem_max = 212992
+net.core.wmem_default = 212992
+net.core.wmem_max = 212992
+net.ipv4.tcp_rmem = 4096    87380   6291456
+net.ipv4.tcp_wmem = 4096    16384   4194304
+
+RECEIVER
+Config Receive Buffer to 8MB:
+- sudo sysctl -w net.ipv4.tcp_rmem="4096    87380   8388608"
+- sudo sysctl -w net.core.rmem_max=16777216
+Config Receive Buffer to 16MB:
+- sudo sysctl -w net.ipv4.tcp_rmem="4096    87380   16777216"
+- sudo sysctl -w net.core.rmem_max=33554432
+
+SENDER:
+Config Sender Buffer to 8MB:
+- sudo sysctl -w net.ipv4.tcp_wmem="4096    16384   8388608"
+- sudo sysctl -w net.core.wmem_max=16777216
+Config Sender Buffer to 16MB:
+- sudo sysctl -w net.ipv4.tcp_wmem="4096    16384   16777216"
+- sudo sysctl -w net.core.wmem_max=33554432
+
+*********************** Using Environment Variables ***********************
+# Add export command to Linux or Mac .bashrc or .bash_profile
+export NET_USERNAME="admin"
+export NET_PASSWORD="password"
+
+import os
+username = os.getenv("PY_USERNAME")
+password = os.getenv("PY_PASSWORD") if os.getenv("PY_PASSWORD") else getpass()

@@ -1,0 +1,62 @@
+########## Regular Expression Special Characters ##########
+
+.	Matches ANY single character. It has to be at least 1 character in the string. Search for empty/null "" won't result in a match.
+re.search(r".", "10.220.100.1") matches "1"
+re.search(r"..", "10.220.100.1") matches "10"
+re.search(r"...", "10.220.100.1") matches "10."
+re.search(r".", "") No match because there is nothing in the searched "" string
+
++	Matches ONE or MORE times. Whatever comes before the + character.
+re.search(r".+", "10.220.100.1") matches the entire "10.220.100.1" because there is something (1) before the + character, be greedy and matches as many time as you can.
+
+*	Matches ZERO or MORE times
+re.search(r".*", "10.220.100.1") same as the + character but will match when there is an empty/null string "".
+re.search(r".*", "") results in a match "" because of ZERO or MORE times.
+
+^	Beginning of the string/line
+re.search(r"^.+", "10.220.100.1") means it has to start at the beginning of the line/string.
+
+$	The end of the string/line
+re.search(r"^.+$", "10.220.100.1") means it has to start at the beginning of the line/string and all the way to the end of the string/line.
+
+\s	Whitespace character class
+re.search(r"^\s+", "  10.220.100.1     ") matches the 2 whitespaces at the beginning of the string
+
+\d	Digit/Number character class. Matches any digit from 0 to 9.
+re.search(r"\d", "10.220.100.1") matches "1"
+re.search(r"\d\d", "10.220.100.1") matches "10"
+re.search(r"\d\d\d", "10.220.100.1") matches "200" because I didn't tell it to match at the beginning of the string/line (^). It matches anywhere in the string for 3 digits and ignore the "." because "." is not a digit.
+re.search(r"^\d\d\d", "10.220.100.1") NO match  because the beginning of the string only has 2 digits and a non-digit "10."
+re.search(r"^\d+", "10.220.100.1") matches "10" because there is a non-digit "." between "10.200"
+re.search(r"\d+$", "10.220.100.1") matches "1" because $ tells it to match at the end of the string
+
+\S	Non-whitespace character class
+re.search(r"^\s+\S+", "  10.220.100.1     ") matches "  10.200.10.1" and won't match the trailing whitespaces because of \S
+
+[]	Construct your own character class
+re.search(r"^\s+[\d\.]", "  10.220.100.1     ") matches "  1" the leading whitespaces and a single digit
+re.search(r"^\s+[\d\.]+", "  10.220.100.1     ") matches "  10.220.100.1" the leading whitespaces and all the digits but not the trailing whitespaces.
+re.search(r"[*>]+", "*>") matches inside the [] for * or > symbols and anything after the symbol.
+
+()	Caputer and group by parenthsis to save things
+re.search(r"^\s(\S+)", "  10.220.100.1     ") matches "  10.220.100.1"
+re.search(r"^\s(\S+)", "  10.220.100.1     ").group(0) matches "  10.220.100.1". Group 0 is the entire match which is outside the parenthsis and inside the parenthsis
+re.search(r"^\s(\S+)", "  10.220.100.1     ").group(1) matches "10.220.100.1". Group 1 is what in the first parenthsis. Group 2 is the sencond parenthsis. Group 3 is the third parenthsis and so on.
+(?P<name_1>\S+) Gives a variable name_1 to parenthsis. To see result from the parenthsis, use .groupdict() to see the dictionary key (name_1) and value
+re.search(r"^Process (.*)$", output, flags=re.M) use the flags=re.M to search line by line. By default .* only match only on the first line and doesn't match over the new lines.
+re.search(r"^Process (.*)$", output, flags=re.DOTALL) .* now matches the beginning (^) and every line all the way to the end of the file.
+flags=re.I means ignore capitalization
+
+re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", "10.220.88.11") for matching IP addresses
+\d = digit
+{1,3} = the digit can be there once or upto three times
+\. = Must backblack the period because the period is a special character
+
+re.search(r"[0-9\.]+", "10.220.88.11") shorter version for matching IP addresses
+
+\D matches Non-Digit character such as letters
+
+\W matches a whole word
+
+\w matches characters from a-z, A-Z, digits from 0-9, and the underscore _ character
+
